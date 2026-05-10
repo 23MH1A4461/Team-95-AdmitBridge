@@ -1,0 +1,6 @@
+*_admission_data.csv
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
