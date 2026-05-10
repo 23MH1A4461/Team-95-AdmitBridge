@@ -1,0 +1,208 @@
+.status-tracking {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.stepper-container {
+  padding: 30px;
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.stepper-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+  color: var(--text-dark);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stepper-item {
+  display: flex;
+  margin-bottom: 0;
+  position: relative;
+}
+
+.stepper-item:last-child {
+  margin-bottom: 0;
+}
+
+.stepper-icon-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 20px;
+  width: 32px;
+}
+
+.stepper-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  z-index: 2;
+  background-color: var(--bg-color);
+  border: 2px solid var(--border-color);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+.stepper-line {
+  width: 2px;
+  flex-grow: 1;
+  background-color: var(--border-color);
+  margin-top: 8px;
+  margin-bottom: 8px;
+  min-height: 40px;
+  transition: all 0.3s ease;
+}
+
+/* Status Colors */
+.stepper-item.completed .stepper-icon {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+.stepper-item.completed .stepper-line {
+  background-color: var(--primary-color);
+}
+
+.stepper-item.current .stepper-icon {
+  background-color: var(--card-bg);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+}
+
+.stepper-item.rejected .stepper-icon {
+  background-color: var(--error-color, #e74c3c);
+  border-color: var(--error-color, #e74c3c);
+  color: white;
+}
+
+.stepper-content {
+  flex-grow: 1;
+  padding-bottom: 30px;
+}
+
+.stepper-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.stepper-title-row h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.stepper-item.upcoming .stepper-title-row h3 {
+  color: var(--text-light);
+}
+
+.stepper-details {
+  margin-top: 12px;
+  padding: 16px;
+  background-color: var(--bg-color);
+  border-radius: 8px;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.pending-action-box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.message-from-consultancy {
+  background-color: rgba(212, 175, 55, 0.1);
+  padding: 16px;
+  border-left: 4px solid var(--primary-color);
+  border-radius: 0 8px 8px 0;
+}
+
+.message-from-consultancy strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--primary-color);
+}
+
+.submission-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submission-form label {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.submission-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  min-height: 100px;
+  font-family: inherit;
+  resize: vertical;
+  background-color: var(--bg-color);
+  color: var(--text-dark);
+}
+
+.file-upload-mock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  color: var(--text-light);
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.file-upload-mock:hover {
+  background-color: rgba(212, 175, 55, 0.05);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.decision-box {
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.decision-box.approved {
+  background-color: rgba(46, 204, 113, 0.1);
+  border: 1px solid #2ecc71;
+  color: #27ae60;
+}
+
+.decision-box.rejected {
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 1px solid #e74c3c;
+  color: #c0392b;
+}
+
+.decision-box h4 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.decision-box p {
+  margin: 0;
+}

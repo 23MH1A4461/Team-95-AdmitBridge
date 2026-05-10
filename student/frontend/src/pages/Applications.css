@@ -1,0 +1,67 @@
+.table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.applications-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.applications-table th,
+.applications-table td {
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.applications-table th {
+  background-color: var(--bg-color);
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.applications-table tbody tr {
+  transition: var(--transition);
+}
+
+.applications-table tbody tr:hover {
+  background-color: rgba(248, 249, 251, 0.5);
+}
+
+.applications-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.uni-name {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.app-id {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.flex-center-gap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
