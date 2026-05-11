@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [role, setRole] = useState('student');
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (role === 'student') {
-      navigate('/dashboard');
-    } else {
+      const redirectTo = location.state?.redirectTo || '/dashboard';
+      navigate(redirectTo);
+    } else if (role === 'consultancy') {
       window.location.href = 'http://localhost:5174/';
+    } else if (role === 'admin') {
+      window.location.href = 'http://localhost:5175/';
     }
   };
 
@@ -28,7 +32,8 @@ const Login = () => {
           
           <div className="role-tabs">
             <button type="button" className={`role-tab ${role === 'student' ? 'active' : ''}`} onClick={() => setRole('student')}>Student</button>
-            <button type="button" className={`role-tab ${role === 'admin' ? 'active' : ''}`} onClick={() => setRole('admin')}>Admin / Consultancy</button>
+            <button type="button" className={`role-tab ${role === 'consultancy' ? 'active' : ''}`} onClick={() => setRole('consultancy')}>Consultancy</button>
+            <button type="button" className={`role-tab ${role === 'admin' ? 'active' : ''}`} onClick={() => setRole('admin')}>Admin</button>
           </div>
 
           <form className="auth-form" onSubmit={handleLogin}>

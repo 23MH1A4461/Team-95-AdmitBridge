@@ -1,0 +1,93 @@
+[
+    {
+        "name": "boomika bodhu",
+        "country": "US",
+        "course": "Artificial Intelligence",
+        "score": "None: 300",
+        "unis": "Illinois College",
+        "status": "New Lead",
+        "initials": "BB",
+        "consultancyName": "Elite Experts",
+        "email": "jane.doe@example.com",
+        "phone": "7997560018",
+        "timestamp": "2026-05-09T15:25:06.377429"
+    },
+    {
+        "name": "suchi inje",
+        "country": "US",
+        "course": "Data Science",
+        "score": "None: 300",
+        "unis": "Florida University",
+        "status": "New Lead",
+        "initials": "SI",
+        "consultancyName": "Elite Experts",
+        "email": "jane.doe@example.com",
+        "phone": "7997560018",
+        "timestamp": "2026-05-09T15:25:06.377466"
+    },
+    {
+        "name": "raju varadha",
+        "country": "US",
+        "course": "Data Science",
+        "score": "PTE: 300",
+        "unis": "Texas College",
+        "status": "New Lead",
+        "initials": "RV",
+        "consultancyName": "Summit Services",
+        "email": "samuelraju@gmail.com",
+        "phone": "7997560018",
+        "timestamp": "2026-05-09T15:25:06.377470"
+    },
+    {
+        "name": "jj jj",
+        "country": "US",
+        "course": "Data Science",
+        "score": "None: 300",
+        "unis": "Florida University",
+        "status": "Under Review",
+        "initials": "JJ",
+        "consultancyName": "Summit Group",
+        "email": "john.doe@example.com",
+        "phone": "9876543210",
+        "timestamp": "2026-05-09T15:25:06.377478"
+    },
+    {
+        "name": "mounika bachala",
+        "country": "US",
+        "course": "Data Science",
+        "score": "TOEFL: 300",
+        "unis": "Florida University",
+        "status": "Accepted",
+        "initials": "MB",
+        "consultancyName": "Overseas Education",
+        "email": "jane.doe@example.com",
+        "phone": "7997560018",
+        "timestamp": "2026-05-09T15:25:06.377480"
+    },
+    {
+        "name": "ashok atchuta",
+        "country": "US",
+        "course": "Computer Science",
+        "score": "None: 300",
+        "unis": "San Antonio University of Texas",
+        "status": "Accepted",
+        "initials": "AA",
+        "consultancyName": "Apex Education",
+        "email": "23mh1a4404@acoe.edu.in",
+        "phone": "+917386529731",
+        "timestamp": "2026-05-10T14:55:41.281596"
+    },
+    {
+        "name": "raju sameal",
+        "country": "US",
+        "course": "Computer Science",
+        "score": "TOEFL: 300",
+        "unis": "North Carolina Wesleyan University",
+        "status": "Accepted",
+        "initials": "RS",
+        "consultancyName": "Pinnacle Mentors",
+        "email": "raju@gmail.com",
+        "phone": "9014360018",
+        "timestamp": "2026-05-10T15:12:06.371539"
+    }
+]

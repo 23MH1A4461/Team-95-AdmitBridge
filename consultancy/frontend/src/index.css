@@ -2,12 +2,12 @@
   --primary-color: #D4AF37; /* Premium Gold */
   --secondary-color: #B48F2A; /* Deep Gold */
   --header-bg: #0F172A; /* Deep Navy - Perfect complement to gold */
-  --bg-color: #0A0A0B; /* True Dark Mode */
-  --bg-gradient: linear-gradient(135deg, #0A0A0B 0%, #111827 100%);
-  --card-bg: #18181B; /* Deep charcoal */
+  --bg-color: #0B1120; /* Deep Navy Background */
+  --bg-gradient: linear-gradient(135deg, #0B1120 0%, #0F172A 100%);
+  --card-bg: #1E293B; /* Lighter navy for cards */
   --text-dark: #F9FAFB; /* Off-white for dark mode */
   --text-light: #9CA3AF;
-  --border-color: #27272A; /* Subtle dark border */
+  --border-color: #334155; /* Subtle navy border */
   --success-color: #10B981;
   --warning-color: #F59E0B;
   --danger-color: #EF4444;

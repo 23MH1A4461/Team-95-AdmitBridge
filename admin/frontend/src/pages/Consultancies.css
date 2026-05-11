@@ -1,0 +1,8 @@
+/* Consultancies specific styling */
+/* Inherits from Students.css for shared module-container and admin-table styles */
+
+.table-card {
+  /* Using standard table card from previous file */
+}
+
+/* Add any consultancy specific styles here if needed */

@@ -137,8 +137,8 @@ const AssignedStudents = () => {
   return (
     <div className="fade-in">
       <div className="page-header">
-        <div className="page-header-icon" style={{ backgroundColor: 'var(--primary-color)' }}>
-          <GraduationCap size={24} color="white" />
+        <div className="page-header-icon">
+          <GraduationCap size={24} />
         </div>
         <div className="page-header-text">
           <h1>Assigned Students</h1>
@@ -154,13 +154,13 @@ const AssignedStudents = () => {
             placeholder="Search students by name or course..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: '100%', padding: '10px 10px 10px 40px', borderRadius: '8px', border: '1px solid var(--border-color)' }} 
+            style={{ width: '100%', padding: '10px 10px 10px 40px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-dark)' }} 
           />
         </div>
         <select 
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: '150px', fontWeight: 500, color: 'var(--primary-color)', backgroundColor: '#fff8f1' }}
+          style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: '150px', fontWeight: 500, color: 'var(--primary-color)', background: 'var(--card-bg)' }}
         >
           <option value="NotReviewed">Not Reviewed</option>
           <option value="Pending">Pending Info</option>
@@ -170,7 +170,7 @@ const AssignedStudents = () => {
         <select 
           value={filterCountry}
           onChange={(e) => setFilterCountry(e.target.value)}
-          style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: '150px' }}
+          style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: '150px', background: 'var(--card-bg)', color: 'var(--text-dark)' }}
         >
           {uniqueCountries.map((country, idx) => (
             <option key={idx} value={country}>{country}</option>
@@ -231,7 +231,7 @@ const AssignedStudents = () => {
 
       {selectedStudent && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="modal-content card fade-in" style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', backgroundColor: 'white', borderRadius: '16px' }}>
+          <div className="modal-content card fade-in" style={{ width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', background: 'var(--bg-color)', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
               <h2 style={{ margin: 0, color: 'var(--text-dark)' }}>Application Details</h2>
               <button onClick={() => setSelectedStudent(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-light)' }}>&times;</button>
@@ -308,7 +308,7 @@ const AssignedStudents = () => {
                 value={additionalRequest}
                 onChange={(e) => setAdditionalRequest(e.target.value)}
                 placeholder="e.g., Please upload your 12th-grade mark sheet and provide your exact IELTS TRF number..."
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', minHeight: '100px', marginBottom: '16px', fontFamily: 'inherit', resize: 'vertical' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--card-bg)', color: 'var(--text-dark)', minHeight: '100px', marginBottom: '16px', fontFamily: 'inherit', resize: 'vertical' }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button 

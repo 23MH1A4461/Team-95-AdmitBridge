@@ -80,7 +80,7 @@
 .step-number {
   width: 50px;
   height: 50px;
-  background-color: white;
+  background-color: var(--card-bg);
   border: 2px solid var(--primary-color);
   border-radius: 50%;
   display: flex;
@@ -93,7 +93,7 @@
 }
 
 .step-content {
-  background-color: white;
+  background-color: var(--card-bg);
   padding: 24px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -120,7 +120,7 @@
 }
 
 .exam-card {
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -168,7 +168,7 @@
 }
 
 .tip-box {
-  background-color: #fff8f1;
+  background-color: var(--card-bg);
   padding: 12px;
   border-radius: 8px;
   border-left: 4px solid var(--accent-color);
@@ -178,7 +178,7 @@
 
 /* Country Comparison */
 .country-tabs-container {
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   border: 1px solid var(--border-color);
@@ -211,7 +211,7 @@
 .country-tab.active {
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
-  background-color: white;
+  background-color: var(--card-bg);
 }
 
 .country-content {

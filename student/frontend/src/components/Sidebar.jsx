@@ -52,6 +52,12 @@ const Sidebar = () => {
               <span>Settings</span>
             </NavLink>
           </li>
+          <li>
+            <a href="http://localhost:5173/" className="nav-link">
+              <Compass size={20} />
+              <span>Back to Home</span>
+            </a>
+          </li>
         </ul>
       </div>
     </aside>

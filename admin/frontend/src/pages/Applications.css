@@ -1,0 +1,27 @@
+/* Applications specific styling */
+/* Inherits from Students.css for shared module-container and admin-table styles */
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 16px;
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.status-filter {
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+}

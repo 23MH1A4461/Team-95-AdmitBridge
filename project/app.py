@@ -1,0 +1,368 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import pandas as pd
+import joblib
+import json
+import os
+from datetime import datetime
+
+app = Flask(__name__, static_folder='static', static_url_path='')
+CORS(app)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(BASE_DIR, 'model.pkl')
+db_path = os.path.join(BASE_DIR, 'universities_db.csv')
+options_path = os.path.join(BASE_DIR, 'options.json')
+consultancies_path = os.path.join(BASE_DIR, 'consultancies_dataset_final.csv')
+applications_path = os.path.join(BASE_DIR, 'applications.json')
+notifications_path = os.path.join(BASE_DIR, 'notifications.json')
+
+def add_notification(target, title, message):
+    notifications = []
+    if os.path.exists(notifications_path):
+        with open(notifications_path, 'r') as f:
+            try:
+                notifications = json.load(f)
+            except json.JSONDecodeError:
+                pass
+    
+    notif = {
+        "id": datetime.now().timestamp(),
+        "target": target,
+        "title": title,
+        "message": message,
+        "time": datetime.now().strftime("%Y-%m-%d %I:%M %p"),
+        "timestamp": datetime.now().isoformat(),
+        "read": False
+    }
+    notifications.insert(0, notif)
+    
+    with open(notifications_path, 'w') as f:
+        json.dump(notifications, f, indent=4)
+
+model = None
+universities_db = None
+consultancies_db = None
+consultancy_model_success = None
+consultancy_model_rating = None
+options = {}
+
+if os.path.exists(model_path) and os.path.exists(db_path) and os.path.exists(options_path):
+    print("Loading model and university database...")
+    model = joblib.load(model_path)
+    universities_db = pd.read_csv(db_path)
+    with open(options_path, 'r') as f:
+        options = json.load(f)
+    if os.path.exists(consultancies_path):
+        print("Loading consultancies dataset...")
+        consultancies_db = pd.read_csv(consultancies_path)
+        
+        try:
+            print("Loading consultancy ML models...")
+            consultancy_model_success = joblib.load(os.path.join(BASE_DIR, 'consultancy_model_success.pkl'))
+            consultancy_model_rating = joblib.load(os.path.join(BASE_DIR, 'consultancy_model_rating.pkl'))
+        except FileNotFoundError:
+            print("WARNING: Consultancy ML models not found.")
+            consultancy_model_success = None
+            consultancy_model_rating = None
+else:
+    print("WARNING: artifacts not found. Train the model first.")
+
+@app.route('/')
+def serve_frontend():
+    return app.send_static_file('index.html')
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    role = request.args.get('role', 'student')
+    notifications = []
+    if os.path.exists(notifications_path):
+        with open(notifications_path, 'r') as f:
+            try:
+                all_notifs = json.load(f)
+                notifications = [n for n in all_notifs if n.get('target') == role]
+            except json.JSONDecodeError:
+                pass
+    return jsonify(notifications)
+
+@app.route('/api/options', methods=['GET'])
+def get_options():
+    # If the app was started before artifacts were ready, try loading them again
+    global options, model, universities_db, consultancies_db, consultancy_model_success, consultancy_model_rating
+    if not options and os.path.exists(options_path):
+        model = joblib.load(model_path)
+        universities_db = pd.read_csv(db_path)
+        with open(options_path, 'r') as f:
+            options = json.load(f)
+        if os.path.exists(consultancies_path):
+            consultancies_db = pd.read_csv(consultancies_path)
+            try:
+                consultancy_model_success = joblib.load(os.path.join(BASE_DIR, 'consultancy_model_success.pkl'))
+                consultancy_model_rating = joblib.load(os.path.join(BASE_DIR, 'consultancy_model_rating.pkl'))
+            except FileNotFoundError:
+                pass
+    return jsonify(options)
+
+@app.route('/api/recommend', methods=['POST'])
+def recommend():
+    if model is None or universities_db is None:
+        return jsonify({"error": "Model not loaded. Please train the model first."}), 500
+
+    data = request.json
+    
+    cgpa = float(data.get('cgpa', 0))
+    budget = float(data.get('budget', 0))
+    exam_type = data.get('exam_type', '').lower()
+    exam_score = float(data.get('exam_score', 0))
+    back_logs = float(data.get('back_logs', 0))
+    country = data.get('country', '')
+    branch = data.get('branch', '')
+    intake = data.get('intake', '') # can be empty string for any
+    
+    gre_score = exam_score if exam_type == 'gre' else 0
+    ielts_score = exam_score if exam_type == 'ielts' else 0
+    toefl_score = exam_score if exam_type == 'toefl' else 0
+    duolingo_score = exam_score if exam_type == 'duolingo' else 0
+    
+    eligible_unis = universities_db.copy()
+    if budget > 0:
+        eligible_unis = eligible_unis[eligible_unis['tution_fee_in_usd'] <= budget]
+    if country:
+        eligible_unis = eligible_unis[eligible_unis['country'] == country]
+    if branch:
+        eligible_unis = eligible_unis[eligible_unis['branch'] == branch]
+    if intake:
+        eligible_unis = eligible_unis[eligible_unis['intake'] == intake]
+        
+    if len(eligible_unis) == 0:
+        return jsonify({"recommendations": []})
+        
+    X_input = pd.DataFrame({
+        'applicant_cgpa': [cgpa] * len(eligible_unis),
+        'gre_score': [gre_score] * len(eligible_unis),
+        'ielts_score': [ielts_score] * len(eligible_unis),
+        'toefl_score': [toefl_score] * len(eligible_unis),
+        'duolingo_score': [duolingo_score] * len(eligible_unis),
+        'back_logs': [back_logs] * len(eligible_unis),
+        'tution_fee_in_usd': eligible_unis['tution_fee_in_usd'].values,
+        'historical_acceptance_rate': eligible_unis['historical_acceptance_rate'].values,
+        'country': eligible_unis['country'].values,
+        'intake': eligible_unis['intake'].values,
+        'branch': eligible_unis['branch'].values
+    })
+    
+    probabilities = model.predict_proba(X_input)[:, 1]
+    
+    eligible_unis['acceptance_probability'] = probabilities
+    
+    top_unis = eligible_unis.sort_values(by='acceptance_probability', ascending=False)
+    
+    # Optimize serialization
+    top_unis['tution_fee_in_usd'] = top_unis['tution_fee_in_usd'].astype(int)
+    top_unis['acceptance_probability'] = top_unis['acceptance_probability'].astype(float)
+    
+    results = top_unis[['university_name', 'country', 'state', 'branch', 'intake', 'tution_fee_in_usd', 'acceptance_probability']].to_dict('records')
+        
+    return jsonify({"recommendations": results})
+
+@app.route('/api/consultancies', methods=['POST'])
+def recommend_consultancies():
+    if consultancies_db is None:
+        return jsonify({"error": "Consultancies data not loaded."}), 500
+        
+    data = request.json
+    budget = float(data.get('budget', 0))
+    state = data.get('state', '')
+    area = data.get('area', '')
+    country = data.get('country', '')
+    
+    eligible = consultancies_db.copy()
+    
+    if budget > 0:
+        eligible = eligible[eligible['total_fee_inr'] <= budget]
+    if state:
+        eligible = eligible[eligible['state'] == state]
+    if area:
+        eligible = eligible[eligible['area_district'].str.contains(area, case=False, na=False)]
+    if country:
+        eligible = eligible[eligible['primary_country'] == country]
+        
+    if len(eligible) == 0:
+        return jsonify({"recommendations": []})
+        
+    # Predict success rate and rating using models if available
+    if consultancy_model_success is not None and consultancy_model_rating is not None:
+        X_predict = eligible[['state', 'area_district', 'total_fee_inr', 'primary_country']]
+        eligible['predicted_success_rate'] = consultancy_model_success.predict(X_predict).round(1)
+        eligible['predicted_rating'] = consultancy_model_rating.predict(X_predict).round(1)
+        
+        # Override actuals with predictions for display to fulfill user request
+        eligible['success_rate_pct'] = eligible['predicted_success_rate']
+        eligible['rating'] = eligible['predicted_rating']
+    else:
+        # Fallback to calculated/actual if models missing
+        eligible['success_rate_pct'] = (eligible['successful_applications'] / eligible['students_applied'] * 100).round(1)
+    
+    # Sort by predicted rating and success rate
+    top_consultancies = eligible.sort_values(by=['rating', 'success_rate_pct'], ascending=[False, False])
+    
+    results = top_consultancies[['consultancy_name', 'state', 'area_district', 'total_fee_inr', 'rating', 'reviews', 'success_rate_pct']].head(12).to_dict('records')
+    
+    return jsonify({"recommendations": results})
+
+@app.route('/api/apply', methods=['POST'])
+def apply_consultancy():
+    data = request.json
+    applications = []
+    if os.path.exists(applications_path):
+        with open(applications_path, 'r') as f:
+            try:
+                applications = json.load(f)
+            except json.JSONDecodeError:
+                pass
+    
+    # Generate a simple initials from name
+    first = data.get('first_name', '')
+    last = data.get('last_name', '')
+    initials = (first[0] if first else '') + (last[0] if last else '')
+    
+    app_record = {
+        "name": f"{first} {last}".strip(),
+        "country": data.get('target_country', 'N/A'),
+        "course": data.get('intended_course', 'N/A'),
+        "score": f"{data.get('eng_test', '')}: {data.get('test_score', '')}".strip(': '),
+        "unis": data.get('school_name', 'N/A'),
+        "status": "New Lead",
+        "initials": initials.upper(),
+        "consultancyName": data.get('consultancyName', ''),
+        "email": data.get('email', ''),
+        "phone": data.get('phone', ''),
+        "timestamp": datetime.now().isoformat()
+    }
+    applications.append(app_record)
+    
+    with open(applications_path, 'w') as f:
+        json.dump(applications, f, indent=4)
+        
+    # Generate Notification for Consultant
+    add_notification('consultant', 'New Lead Received', f"{first} {last} has applied for {data.get('school_name', 'N/A')}.")
+        
+    return jsonify({"success": True})
+
+@app.route('/api/applications', methods=['GET'])
+def get_applications():
+    if os.path.exists(applications_path):
+        with open(applications_path, 'r') as f:
+            try:
+                apps = json.load(f)
+                # Dynamically fetch fee from consultancies dataset
+                if consultancies_db is not None:
+                    for app_obj in apps:
+                        app_obj['fee'] = 15000 # Fallback
+                        try:
+                            c_name = app_obj.get('consultancyName')
+                            if c_name:
+                                matches = consultancies_db[consultancies_db['consultancy_name'] == c_name]
+                                if not matches.empty:
+                                    val = matches.iloc[0]['total_fee_inr']
+                                    app_obj['fee'] = int(float(val))
+                        except Exception as e:
+                            print(f"Failed to fetch dynamic fee for {c_name}: {e}")
+                return jsonify(apps)
+            except json.JSONDecodeError:
+                return jsonify([])
+    return jsonify([])
+
+@app.route('/api/applications/update', methods=['POST'])
+def update_application():
+    data = request.json
+    name = data.get('name')
+    unis = data.get('unis')
+    new_status = data.get('status')
+    message = data.get('message')
+    
+    if not name or not unis or not new_status:
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    applications = []
+    if os.path.exists(applications_path):
+        with open(applications_path, 'r') as f:
+            try:
+                applications = json.load(f)
+            except json.JSONDecodeError:
+                pass
+                
+    updated = False
+    for app_record in applications:
+        if app_record.get('name') == name and app_record.get('unis') == unis:
+            app_record['status'] = new_status
+            if message is not None:
+                app_record['message'] = message
+            else:
+                # Clear message if explicitly not passed or None? 
+                # Better to overwrite it explicitly if empty string is passed.
+                # If they pass '', it will overwrite it.
+                pass
+            updated = True
+            break
+            
+    if updated:
+        with open(applications_path, 'w') as f:
+            json.dump(applications, f, indent=4)
+            
+        # Generate Notification for Student
+        add_notification('student', 'Application Status Updated', f"Your application to {unis} is now: {new_status}.")
+        
+        return jsonify({"success": True})
+        
+    return jsonify({"error": "Application not found"}), 404
+
+@app.route('/api/applications/resubmit', methods=['POST'])
+def resubmit_application():
+    data = request.json
+    name = data.get('name')
+    unis = data.get('unis')
+    
+    if not name or not unis:
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    applications = []
+    if os.path.exists(applications_path):
+        with open(applications_path, 'r') as f:
+            try:
+                applications = json.load(f)
+            except json.JSONDecodeError:
+                pass
+                
+    updated = False
+    for app_record in applications:
+        if app_record.get('name') == name and app_record.get('unis') == unis:
+            app_record['status'] = 'Under Review'
+            updated = True
+            break
+            
+    if updated:
+        with open(applications_path, 'w') as f:
+            json.dump(applications, f, indent=4)
+            
+        # Generate Notification for Consultant
+        add_notification('consultant', 'Documents Resubmitted', f"Student {name} has uploaded new documents for {unis}.")
+        
+        return jsonify({"success": True})
+        
+    return jsonify({"error": "Application not found"}), 404
+
+@app.route('/api/resources', methods=['GET'])
+def get_resources():
+    resources = [
+        {"id": 1, "title": "F1 Visa Interview Prep Guide", "description": "Top 50 most asked questions and how to answer them confidently.", "category": "Visa", "type": "pdf", "readTime": "15 min read"},
+        {"id": 2, "title": "Winning SOP Template", "description": "A proven structure to write a Statement of Purpose that gets you accepted.", "category": "Essays", "type": "doc", "readTime": "10 min read"},
+        {"id": 3, "title": "Top US Scholarships for International Students", "description": "A comprehensive list of fully funded and partially funded scholarships.", "category": "Financial", "type": "link", "readTime": "5 min read"},
+        {"id": 4, "title": "GRE vs GMAT: Which should you take?", "description": "Breakdown of both exams to help you decide which fits your profile.", "category": "Test Prep", "type": "video", "readTime": "8 min watch"},
+        {"id": 5, "title": "Pre-Departure Checklist", "description": "Everything you need to pack and prepare before flying to your university.", "category": "General", "type": "list", "readTime": "5 min read"},
+        {"id": 6, "title": "How to ask for a Letter of Recommendation", "description": "Email templates and strategies to get strong LORs from professors.", "category": "Essays", "type": "doc", "readTime": "7 min read"}
+    ]
+    return jsonify(resources)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

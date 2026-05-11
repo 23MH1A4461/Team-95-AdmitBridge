@@ -60,12 +60,12 @@ const Applications = () => {
   return (
     <div className="fade-in">
       <div className="page-header">
-        <div className="page-header-icon" style={{ backgroundColor: 'var(--secondary-color)' }}>
-          <FileCheck size={24} color="white" />
+        <div className="page-header-icon">
+          <FileCheck size={24} />
         </div>
         <div className="page-header-text">
-          <h1>Reviews</h1>
-          <p>Review and manage ongoing university applications.</p>
+          <h1>Application Reviews</h1>
+          <p>Review submitted documents and finalize university applications.</p>
         </div>
       </div>
 

@@ -3,7 +3,7 @@
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  background-color: white;
+  background-color: var(--card-bg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding-bottom: 80px; /* Space for the floating button */
 }
@@ -90,7 +90,7 @@
   display: flex;
   align-items: center;
   padding: 20px;
-  background-color: #f9fafb;
+  background-color: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -195,7 +195,7 @@
 }
 
 .template-form-card {
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.1);
   padding: 48px;
@@ -240,7 +240,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-light);
   display: flex;
   align-items: center;
@@ -348,7 +348,7 @@
 .form-group-template select {
   width: 100%;
   padding: 14px 16px;
-  background-color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.05);
   border: none;
   border-radius: 12px;
   font-family: var(--font-family);
@@ -359,7 +359,7 @@
 
 .form-group-template input:focus,
 .form-group-template select:focus {
-  background-color: #fff;
+  background-color: var(--card-bg);
   box-shadow: 0 0 0 2px var(--primary-color);
   outline: none;
 }
@@ -401,7 +401,7 @@
 
 .btn-cancel-pill:hover {
   color: var(--text-dark);
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 @media (max-width: 768px) {

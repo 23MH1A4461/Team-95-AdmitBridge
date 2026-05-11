@@ -13,12 +13,13 @@ import Explore from './pages/Explore';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Resources from './pages/Resources';
+import Home from './pages/Home';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<Layout />}>

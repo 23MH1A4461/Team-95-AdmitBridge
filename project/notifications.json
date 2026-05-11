@@ -1,0 +1,38 @@
+[
+    {
+        "id": 1778406796.745834,
+        "target": "student",
+        "title": "Application Status Updated",
+        "message": "Your application to San Antonio University of Texas is now: Accepted.",
+        "time": "2026-05-10 03:23 PM",
+        "timestamp": "2026-05-10T15:23:16.745870",
+        "read": false
+    },
+    {
+        "id": 1778406717.936197,
+        "target": "student",
+        "title": "Application Status Updated",
+        "message": "Your application to North Carolina Wesleyan University is now: Accepted.",
+        "time": "2026-05-10 03:21 PM",
+        "timestamp": "2026-05-10T15:21:57.936246",
+        "read": false
+    },
+    {
+        "id": 1778406126.378003,
+        "target": "consultant",
+        "title": "New Lead Received",
+        "message": "raju sameal has applied for North Carolina Wesleyan University.",
+        "time": "2026-05-10 03:12 PM",
+        "timestamp": "2026-05-10T15:12:06.378104",
+        "read": false
+    },
+    {
+        "id": 1778405141.28437,
+        "target": "consultant",
+        "title": "New Lead Received",
+        "message": "ashok atchuta has applied for San Antonio University of Texas.",
+        "time": "2026-05-10 02:55 PM",
+        "timestamp": "2026-05-10T14:55:41.284454",
+        "read": false
+    }
+]

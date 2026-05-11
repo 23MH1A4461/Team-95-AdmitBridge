@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FileCheck, Activity, Calendar, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, FileCheck, Activity, Calendar, MessageSquare, Settings, LogOut, Home } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -31,6 +31,16 @@ const Sidebar = () => {
           ))}
         </ul>
       </nav>
+      <div className="sidebar-footer">
+        <a href="http://localhost:5173/" className="nav-link" style={{marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--text-light)', textDecoration: 'none'}}>
+          <Home size={20} />
+          <span>Back to Home</span>
+        </a>
+        <button className="logout-btn" onClick={() => window.location.href = 'http://localhost:5173/login'}>
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };

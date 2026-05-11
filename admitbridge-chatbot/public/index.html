@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdmitBridge AI Assistant</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f8fafc;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg), #000000);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 85vh;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: var(--primary);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            animation: fadeIn 0.3s ease-in-out;
+            line-height: 1.5;
+        }
+        .user-msg {
+            background: var(--primary);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .bot-msg {
+            background: var(--surface);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .input-area {
+            display: flex;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--surface);
+            color: white;
+            outline: none;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover { background: #4338ca; }
+        .mic-btn {
+            background: #ef4444;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+        .mic-btn.listening {
+            animation: pulse 1.5s infinite;
+            background: #b91c1c;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        /* Basic Markdown Styling */
+        .bot-msg strong { color: #818cf8; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">🚀 AdmitBridge AI</div>
+    <div class="chat-box" id="chat-box">
+        <div class="message bot-msg">Hello! I'm the AdmitBridge AI. Ask me anything about the platform's features, architecture, or how it works!</div>
+    </div>
+    <div class="input-area">
+        <button class="mic-btn" id="mic-btn" title="Click to speak">🎤</button>
+        <input type="text" id="user-input" placeholder="Type or speak your question..." autocomplete="off"/>
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const micBtn = document.getElementById('mic-btn');
+
+    // Web Speech API Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            micBtn.classList.add('listening');
+            userInput.placeholder = "Listening...";
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            userInput.value = transcript;
+            sendMessage(); // Automatically send after speaking
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error", event.error);
+            resetMic();
+        };
+
+        recognition.onend = () => {
+            resetMic();
+        };
+    } else {
+        micBtn.style.display = 'none'; // Hide mic if browser doesn't support it
+        console.warn("Speech Recognition API not supported in this browser.");
+    }
+
+    function resetMic() {
+        micBtn.classList.remove('listening');
+        userInput.placeholder = "Type or speak your question...";
+    }
+
+    micBtn.addEventListener('click', () => {
+        if (recognition) recognition.start();
+    });
+
+    // Formatting simple markdown (bold text) for the UI
+    function formatText(text) {
+        return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    }
+
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', sender === 'user' ? 'user-msg' : 'bot-msg');
+        msgDiv.innerHTML = sender === 'bot' ? formatText(text) : text;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        userInput.value = '';
+        
+        // Temporary typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.classList.add('message', 'bot-msg');
+        typingDiv.id = 'typing';
+        typingDiv.textContent = 'Thinking...';
+        chatBox.appendChild(typingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await response.json();
+            
+            document.getElementById('typing').remove();
+            addMessage(data.reply, 'bot');
+        } catch (error) {
+            document.getElementById('typing').remove();
+            addMessage("Error connecting to server. Make sure it's running!", 'bot');
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+
+</body>
+</html>
