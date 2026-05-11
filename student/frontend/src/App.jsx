@@ -15,26 +15,30 @@ import Register from './pages/Register';
 import Resources from './pages/Resources';
 import Home from './pages/Home';
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/colleges" element={<CollegeSuggestions />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/status" element={<StatusTracking />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/college-finder" element={<CollegeFinderFrame />} />
-        </Route>
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/colleges" element={<CollegeSuggestions />} />
+            <Route path="/applications" element={<Applications />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/status" element={<StatusTracking />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/college-finder" element={<CollegeFinderFrame />} />
+          </Route>
+        </Routes>
+      </ErrorBoundary>
     </Router>
   );
 }
