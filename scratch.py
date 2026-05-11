@@ -1,1 +1,0 @@
-import urllib.request; req = urllib.request.Request('https://duckduckgo.com/?q=!ducky+Harvard+University+official+website', headers={'User-Agent': 'Mozilla/5.0'}); resp = urllib.request.urlopen(req); print(resp.read().decode('utf-8')[:500])
