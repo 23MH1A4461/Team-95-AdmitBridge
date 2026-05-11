@@ -1,0 +1,24 @@
+{
+  "name": "admitbridge-monorepo",
+  "version": "1.0.0",
+  "description": "AdmitBridge Unified Workspace Monorepo",
+  "private": true,
+  "workspaces": [
+    "student/frontend",
+    "consultancy/frontend",
+    "admin/frontend",
+    "admitbridge-chatbot"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "install:all": "npm install",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4",
+    "turbo": "^1.12.0"
+  }
+}

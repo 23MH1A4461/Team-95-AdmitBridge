@@ -1,0 +1,71 @@
+openapi: 3.0.3
+info:
+  title: AdmitBridge API
+  description: Internal APIs for the AdmitBridge University Admissions Platform.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Python Flask ML Backend
+  - url: http://localhost:3000/api
+    description: Node.js Chatbot Backend
+paths:
+  /auth/login:
+    post:
+      summary: Authenticate User
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+  /recommend:
+    post:
+      summary: Get University Recommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: List of universities
+  /applications:
+    get:
+      summary: Fetch applications
+      responses:
+        '200':
+          description: Application array
+  /health:
+    get:
+      summary: Backend Healthcheck
+      responses:
+        '200':
+          description: Status OK
+  /model-info:
+    get:
+      summary: Get ML Model Metrics
+      responses:
+        '200':
+          description: Model Evaluation Metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accuracy:
+                    type: number
+                  r2_score:
+                    type: number
+                  mae:
+                    type: number
+                  dataset:
+                    type: string
+                  train_size:
+                    type: integer
+                  test_size:
+                    type: integer

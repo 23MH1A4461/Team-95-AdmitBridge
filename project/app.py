@@ -445,5 +445,21 @@ def get_resources():
     ]
     return jsonify(resources)
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "OK", "timestamp": datetime.now().isoformat()}), 200
+
+@app.route('/api/model-info', methods=['GET'])
+def get_model_info():
+    metrics_path = os.path.join(BASE_DIR, 'metrics.json')
+    if os.path.exists(metrics_path):
+        with open(metrics_path, 'r') as f:
+            try:
+                metrics = json.load(f)
+                return jsonify(metrics), 200
+            except json.JSONDecodeError:
+                return jsonify({"error": "Failed to parse metrics data."}), 500
+    return jsonify({"error": "Metrics data not found. Train the model first."}), 404
+
 if __name__ == '__main__':
     app.run(debug=False, port=5000)

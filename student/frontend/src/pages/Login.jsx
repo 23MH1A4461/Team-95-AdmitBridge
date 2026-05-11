@@ -11,10 +11,22 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    
+    if (!email.trim() || !email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      setError('Password is required.');
+      return;
+    }
+
+    setLoading(true);
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
@@ -25,7 +37,7 @@ const Login = () => {
       
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || 'Login failed. Please verify your credentials.');
       }
       
       localStorage.setItem('token', data.token);
@@ -41,6 +53,8 @@ const Login = () => {
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,35 +68,37 @@ const Login = () => {
           <h1>Welcome Back to AdmitBridge</h1>
           <p>Sign in to continue to your dashboard.</p>
           
-          <div className="role-tabs">
-            <button type="button" className={`role-tab ${role === 'student' ? 'active' : ''}`} onClick={() => setRole('student')}>Student</button>
-            <button type="button" className={`role-tab ${role === 'consultancy' ? 'active' : ''}`} onClick={() => setRole('consultancy')}>Consultancy</button>
-            <button type="button" className={`role-tab ${role === 'admin' ? 'active' : ''}`} onClick={() => setRole('admin')}>Admin</button>
+          <div className="role-tabs" role="tablist" aria-label="Select User Role">
+            <button type="button" role="tab" aria-selected={role === 'student'} aria-label="Login as Student" className={`role-tab ${role === 'student' ? 'active' : ''}`} onClick={() => setRole('student')}>Student</button>
+            <button type="button" role="tab" aria-selected={role === 'consultancy'} aria-label="Login as Consultancy" className={`role-tab ${role === 'consultancy' ? 'active' : ''}`} onClick={() => setRole('consultancy')}>Consultancy</button>
+            <button type="button" role="tab" aria-selected={role === 'admin'} aria-label="Login as Admin" className={`role-tab ${role === 'admin' ? 'active' : ''}`} onClick={() => setRole('admin')}>Admin</button>
           </div>
 
-          <form className="auth-form" onSubmit={handleLogin}>
-            {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
+          <form className="auth-form" onSubmit={handleLogin} aria-label="Login Form">
+            {error && <div className="error-message" role="alert" style={{color: 'var(--primary-color)', marginBottom: '10px', fontWeight: 'bold'}}>{error}</div>}
             <div className="form-group">
-              <label>Email Address</label>
-              <input type="email" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              <label htmlFor="emailInput">Email Address</label>
+              <input id="emailInput" type="email" aria-label="Email Address" aria-required="true" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label>Password</label>
-              <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+              <label htmlFor="passwordInput">Password</label>
+              <input id="passwordInput" type="password" aria-label="Password" aria-required="true" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             
             <div className="auth-options">
               <label className="remember-me">
-                <input type="checkbox" /> Remember me
+                <input type="checkbox" aria-label="Remember me" /> Remember me
               </label>
-              <a href="#" className="forgot-password">Forgot password?</a>
+              <a href="#" className="forgot-password" aria-label="Forgot password?">Forgot password?</a>
             </div>
             
-            <button type="submit" className="btn-primary w-100">Sign In</button>
+            <button type="submit" className="btn-primary w-100" aria-label="Sign In" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
           </form>
           
           <p className="auth-footer">
-            Don't have an account? <a href="/register">Sign up for free</a>
+            Don't have an account? <a href="/register" aria-label="Sign up for free">Sign up for free</a>
           </p>
         </div>
       </div>

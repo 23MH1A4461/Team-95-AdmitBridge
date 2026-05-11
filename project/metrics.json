@@ -1,0 +1,8 @@
+{
+    "accuracy": 0.8942,
+    "r2_score": 0.6124,
+    "mae": 0.1058,
+    "dataset": "Kaggle Graduate Admissions & Synthesized Options",
+    "train_size": 240000,
+    "test_size": 60000
+}

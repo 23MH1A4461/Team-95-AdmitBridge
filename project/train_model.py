@@ -3,6 +3,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, r2_score, mean_absolute_error
 import joblib
 import json
 import os
@@ -71,14 +73,35 @@ def main():
     
     print(f"Total records: {len(X)}. Sampling 300,000 records for training to avoid memory errors...")
     if len(X) > 300000:
-        X_train = X.sample(n=300000, random_state=42)
-        y_train = y.loc[X_train.index]
+        X_sample = X.sample(n=300000, random_state=42)
+        y_sample = y.loc[X_sample.index]
     else:
-        X_train = X
-        y_train = y
+        X_sample = X
+        y_sample = y
+        
+    X_train, X_test, y_train, y_test = train_test_split(X_sample, y_sample, test_size=0.2, random_state=42)
         
     print(f"Training model on {len(X_train)} records...")
     pipeline.fit(X_train, y_train)
+    
+    print("Evaluating model...")
+    y_pred = pipeline.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    
+    metrics = {
+        "accuracy": round(accuracy, 4),
+        "r2_score": round(r2, 4),
+        "mae": round(mae, 4),
+        "dataset": "Kaggle Graduate Admissions & Synthesized Options",
+        "train_size": len(X_train),
+        "test_size": len(X_test)
+    }
+    
+    print(f"Accuracy: {accuracy:.4f}, R2: {r2:.4f}, MAE: {mae:.4f}")
+    with open('metrics.json', 'w') as f:
+        json.dump(metrics, f, indent=4)
     
     print("Saving artifacts...")
     joblib.dump(pipeline, 'model.pkl')
