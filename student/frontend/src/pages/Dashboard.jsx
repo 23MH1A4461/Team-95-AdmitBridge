@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Send, CheckCircle, Clock, LayoutDashboard } from 'lucide-react';
 import './Dashboard.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Dashboard = () => {
   const [activities, setActivities] = useState([
     { type: 'payment', title: 'Payment Approved for MIT Application Fee', time: '1 day ago', color: 'green' },
@@ -38,7 +48,7 @@ const Dashboard = () => {
     const fetchActivities = async () => {
       try {
         setError(null);
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/applications`);
+        const response = await authFetch(`${import.meta.env.VITE_API_URL}/applications`);
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {

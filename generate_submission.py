@@ -42,6 +42,11 @@ files_to_include = [
         "explanation": "Implements Jest/React Testing Library unit tests for UI components to ensure frontend stability."
     },
     {
+        "section": "7. Code Quality & Completeness (Testing)",
+        "path": "admitbridge-chatbot/server.test.js",
+        "explanation": "Implements Supertest/Jest API unit testing for the Node.js Chatbot microservice to fulfill multi-service testing requirements."
+    },
+    {
         "section": "7. Code Quality & Completeness (Environment)",
         "path": ".env.example",
         "explanation": "Provides a secure configuration template to prevent hardcoded secrets and origins."

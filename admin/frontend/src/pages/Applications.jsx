@@ -2,6 +2,16 @@ import React, { useState } from 'react';
 import { FileText, Search, MoreVertical, CheckCircle, Clock, XCircle, Filter } from 'lucide-react';
 import './Applications.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Applications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -14,7 +24,7 @@ const Applications = () => {
       try {
         setError(null);
         const token = localStorage.getItem('token');
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/applications`, {
+        const res = await authFetch(`${import.meta.env.VITE_API_URL}/admin/applications`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {

@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, FileText, Video, Link as LinkIcon, Download, Search, Filter } from 'lucide-react';
 import './Resources.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Resources = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +23,7 @@ const Resources = () => {
     const fetchResources = async () => {
       try {
         setError(null);
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/resources`); // Changed to generic mock or actual endpoint
+        const response = await authFetch(`${import.meta.env.VITE_API_URL}/resources`); // Changed to generic mock or actual endpoint
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {

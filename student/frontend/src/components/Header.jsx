@@ -4,6 +4,16 @@ import { Bell, User } from 'lucide-react';
 import logo from '../assets/logo.png';
 import './Header.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Header = () => {
   const [userProfile, setUserProfile] = useState({ name: 'Student', photo: null });
   const [notifications, setNotifications] = useState([]);
@@ -24,7 +34,7 @@ const Header = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications?role=student`); // Use mock backend url
+      const response = await authFetch(`${import.meta.env.VITE_API_URL}/notifications?role=student`); // Use mock backend url
       if (response.ok) {
         const data = await response.json();
         setNotifications(data);

@@ -3,6 +3,16 @@ import { Eye, MapPin, FileText, Compass } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Applications.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Applications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +23,7 @@ const Applications = () => {
     const fetchApplications = async () => {
       try {
         setError(null);
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/applications`); // Uses mock backend if available, or real
+        const response = await authFetch(`${import.meta.env.VITE_API_URL}/applications`); // Uses mock backend if available, or real
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {

@@ -2,6 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UploadCloud, CheckCircle, FileText, AlertCircle, CreditCard, Lock } from 'lucide-react';
 import './Payments.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Payments = () => {
   const [file, setFile] = useState(null);
   const [applications, setApplications] = useState([]);
@@ -44,7 +54,7 @@ const Payments = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${pendingApp._id}/status`, {
+      const response = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/${pendingApp._id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -56,7 +66,7 @@ const Payments = () => {
         alert("Receipt/Documents submitted successfully! The consultant has been notified.");
         setFile(null);
         // Force refresh
-        const refetch = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
+        const refetch = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setApplications(await refetch.json());
@@ -72,7 +82,7 @@ const Payments = () => {
   const handlePayNow = async (appId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/payments/create-intent`, {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/payments/create-intent`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -93,7 +103,7 @@ const Payments = () => {
     const fetchApplications = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
+        const response = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

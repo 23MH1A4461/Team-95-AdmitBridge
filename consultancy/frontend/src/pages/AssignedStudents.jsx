@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, GraduationCap, MapPin, Award } from 'lucide-react';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const AssignedStudents = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +43,7 @@ const AssignedStudents = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${studentToUpdate._id}/status`, {
+      await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/${studentToUpdate._id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -71,7 +81,7 @@ const AssignedStudents = () => {
         // Assuming user.email is the consultancy name for mock purposes
         const consultancyName = user.email.split('@')[0];
         
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/consultancy/${consultancyName}`, {
+        const response = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/consultancy/${consultancyName}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         

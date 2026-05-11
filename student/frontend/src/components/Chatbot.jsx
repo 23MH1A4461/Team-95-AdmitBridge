@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Mic } from 'lucide-react';
 import './Chatbot.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -39,7 +49,7 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_CHATBOT_URL}/chat`, {
+      const response = await authFetch(`${import.meta.env.VITE_CHATBOT_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage })

@@ -3,6 +3,16 @@ import { Bell, Briefcase, Search } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import './Header.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Header = () => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -24,7 +34,7 @@ const Header = () => {
   const fetchNotifications = async () => {
     try {
       // Clear error only when manually fetching or opening dropdown? We'll just leave it.
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications?role=consultant`); // using mock
+      const response = await authFetch(`${import.meta.env.VITE_API_URL}/notifications?role=consultant`); // using mock
       if (response.ok) {
         const data = await response.json();
         setNotifications(data);

@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, DollarSign, Award, ChevronRight, GraduationCap, Compass } from 'lucide-react';
 import './CollegeSuggestions.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const campusImages = [
   "1541339907198-e08756dedf3f", "1521587760476-6c12a4b040da", "1498243691581-b145c3f54a5a", "1532012197267-da84d127e765",
   "1503676260728-1c00da094a0b", "1523240795612-9a054b0db644", "1517486808906-6ca8b3f04846", "1522202176988-66273c2fd55f",
@@ -37,7 +47,7 @@ const CollegeSuggestions = () => {
     const fetchUniversities = async () => {
       try {
         setError(null);
-        const response = await fetch('/real_universities_list.json');
+        const response = await authFetch('/real_universities_list.json');
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         

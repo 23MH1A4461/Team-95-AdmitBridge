@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { FileCheck, Edit, MessageSquare } from 'lucide-react';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const Applications = () => {
   const [applications, setApplications] = useState([]);
   const [error, setError] = useState(null);
@@ -9,7 +19,7 @@ const Applications = () => {
     const fetchApplications = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/applications`, {
+        const res = await authFetch(`${import.meta.env.VITE_API_URL}/applications`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -35,7 +45,7 @@ const Applications = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${appToUpdate._id || 'unknown'}/status`, {
+      const response = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/${appToUpdate._id || 'unknown'}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

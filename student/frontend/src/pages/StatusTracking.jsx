@@ -3,6 +3,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Activity, Check, ChevronDown, ChevronUp, UploadCloud, Send } from 'lucide-react';
 import './StatusTracking.css';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return authFetch(url, { ...options, headers });
+};
+
+
 const StatusTracking = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,7 +41,7 @@ const StatusTracking = () => {
     const pollInterval = setInterval(async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
+        const response = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -62,7 +72,7 @@ const StatusTracking = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${application._id}/status`, {
+      const response = await authFetch(`${import.meta.env.VITE_API_URL}/students/applications/${application._id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
