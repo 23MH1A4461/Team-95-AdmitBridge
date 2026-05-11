@@ -1,74 +1,109 @@
-# AdmitBridge 🎓
+<div align="center">
+  <h1>🎓 AdmitBridge</h1>
+  <p><b>A Unified, AI-Powered University Admission & Consultancy Management Platform</b></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
+    <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask" />
+    <img src="https://img.shields.io/badge/Express.js-404D59?style=for-the-badge" alt="Express" />
+    <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  </p>
+</div>
 
-AdmitBridge is a multi-portal University Admission Platform connecting **Students**, **Educational Consultancies**, and **Administrators**.
+---
 
-## Problem Statement
+## 📖 Table of Contents
+1. [Problem Statement](#-problem-statement)
+2. [Proposed Solution](#-proposed-solution)
+3. [System Architecture](#-system-architecture)
+4. [Project Requirements](#-project-requirements)
+5. [Scope Definitions](#-scope-definitions)
+6. [Future Enhancements](#-future-enhancements)
+7. [Running the Project Locally](#-running-the-project-locally)
 
-The international master's degree admission process is opaque and fragmented. Students struggle to assess their admission probabilities across universities using data-driven metrics. Simultaneously, consultancies rely on disjointed tools to track multiple student applications, leading to workflow inefficiencies, poor status tracking, and a lack of transparency for the applicant. 
+---
 
-## Proposed Solution
+## 🎯 Problem Statement
 
-AdmitBridge provides a decoupled, service-oriented ecosystem. It features distinct React portals for Students, Consultancies, and Admins. Students use a Flask-based Machine Learning predictor to find universities. Application transparency is achieved via dynamic UI state synchronization: students track their progress on a visual stepper, while consultancies process reviews and verify documents via dedicated verification UI elements in the `AssignedStudents.jsx` dashboard. Additionally, an integrated Node.js AI Chatbot provides real-time navigational and informational assistance.
+The international master's degree admission process is opaque and fragmented, making it difficult for students to assess their admission probabilities using data-driven metrics. Simultaneously, educational consultancies rely on disjointed, manual tracking systems for student applications, leading to workflow inefficiencies and poor status transparency for applicants. There is a critical need for a centralized, multi-role ecosystem that predicts admissions, bridges communication, and synchronizes application statuses in real-time.
 
-## Requirements
+---
 
-1. **Isolated React Portals:** Three distinct frontends (Student, Consultancy, Admin) built with React and Vite.
-2. **Machine Learning Predictor:** A Python/Flask backend utilizing `scikit-learn` to calculate university admission probabilities.
-3. **Consultancy Dashboard:** A centralized interface (`AssignedStudents.jsx`) for consultancies to review student applications and verify documents.
-4. **Student Tracking:** A dynamic status tracking interface for students to monitor their application progress.
-5. **AI Chatbot:** A Node.js backend integrating Google's Gemini API for real-time user assistance.
+## 💡 Proposed Solution
 
-## System Architecture
+AdmitBridge is a decoupled, service-oriented ecosystem designed to unify the university application journey. The platform features three distinct React SPAs (**Student**, **Consultancy**, and **Admin** portals) to ensure role-based separation of concerns. 
 
-The architecture relies on decoupled micro-frontends and specialized backends communicating over local ports. **Crucially, this build utilizes local React state and mock data rather than a persistent database.**
+Students utilize a Flask-based Machine Learning service to generate data-driven university predictions based on their academic profile. Application transparency is achieved via dynamic UI state synchronization: students track their progress on a visual stepper, while consultancies process applications via dedicated UI elements. Furthermore, an integrated Node.js AI Chatbot utilizes the Google Gemini API to provide intelligent navigational assistance.
 
-### 1. Frontends (React + Vite + lucide-react)
-- **Student Portal** (`localhost:5173`): Interface for university prediction, chatbot interaction, and application status tracking.
-- **Consultancy Portal** (`localhost:5174`): Dashboard for reviewing profiles and updating application statuses.
-- **Admin Portal** (`localhost:5175`): High-level overview dashboard for monitoring students and consultancies.
+---
 
-### 2. Machine Learning Microservice (Flask + Python)
-Located in `project/app.py`, running on `localhost:5000`.
-- Hosts a serialized `scikit-learn` `.pkl` model loaded via `joblib`.
-- Exposes REST endpoints to calculate admission probabilities based on academic profiles.
+## 🏗️ System Architecture
 
-### 3. AI Chatbot Service (Node.js + Express)
-Located in `admitbridge-chatbot/server.js`, running on `localhost:3000`.
-- Powered by the `@google/genai` SDK.
-- Provides context-aware assistance.
+The platform leverages a modern micro-frontend and polyglot backend architecture. It operates efficiently via local file-system persistence (JSON/CSV) rather than a heavy, persistent database, prioritizing lightweight execution and rapid local prototyping.
 
-## In Scope
-- AI-based admission probability prediction (College Finder).
-- Multi-portal routing using `react-router-dom`.
-- Document verification UI and status tracking logic.
-- Real-time conversational AI integration.
+- **Frontends (React + Vite):** Three distinct portals running concurrently (`student` on 5173, `consultancy` on 5174, `admin` on 5175). Built with `react-router-dom` for routing and `lucide-react` for iconography.
+- **Machine Learning Backend (Flask/Python):** Located in `project/app.py` (Port 5000). Hosts a serialized `scikit-learn` Random Forest model loaded via `joblib`. Exposes REST APIs (`/api/recommend`, `/api/applications`) and manages local state via JSON.
+- **AI Chatbot Backend (Node.js/Express):** Located in `admitbridge-chatbot/server.js` (Port 3000). Powered by the `@google/genai` SDK to serve a context-aware chat endpoint.
+- **Authentication Flow:** Implemented natively within `app.py` via `PyJWT`. The `/api/auth/login` endpoint validates credentials and returns a secure JWT, consumed by React frontends for role-based portal routing.
 
-## Out of Scope
-- **Persistent Database Storage:** MongoDB, PostgreSQL, Firebase, etc., are explicitly excluded from this build.
-- **Backend Authentication:** JWT/OAuth2 workflows and secure session management.
-- **Dedicated Consultancy Recommendation UI:** The ML model handles university prediction, but consultancy assignment operates primarily via basic routing rather than a complex matching algorithm.
-- **Payment Processing:** Live financial API integrations.
+---
 
-## Future Enhancements
-- Integration of a persistent database (MongoDB) for robust data persistence.
-- Implementation of secure JWT-based authentication.
-- Automated email notifications for status updates.
+## ✅ Project Requirements
 
-## How to Run Locally
+1. **Multi-Portal Interface:** Three isolated React/Vite frontends configured with robust `ErrorBoundary` implementations and `prop-types` component validation.
+2. **Machine Learning Integration:** Python backend utilizing `pandas` and `scikit-learn` to calculate admission probabilities dynamically.
+3. **Application Tracking System:** A centralized React dashboard that fetches live synchronization data from the Flask REST API.
+4. **Real-Time AI Assistance:** A Node.js backend executing Google Gemini API calls for conversational user queries.
+5. **Automated Testing Environment:** Implementations of `Vitest` and `@testing-library/react` for frontend unit tests, and `pytest` for backend API endpoint validation.
+
+---
+
+## 🔍 Scope Definitions
+
+### 🟢 In Scope
+* AI-based admission probability calculations (College Finder).
+* Role-based application routing and token generation via `PyJWT`.
+* Centralized application status tracking mapping between Student and Consultancy portals.
+* Mock payment gateway initialization (`/api/payments/create-intent` in Flask).
+* Environment variable (`.env`) configuration to secure API routing and eliminate hardcoded origins.
+* Automated UI (`Login.test.jsx`) and API testing (`test_app.py`).
+
+### 🔴 Out of Scope
+* **External Persistent Databases:** MongoDB, PostgreSQL, and Firebase are intentionally excluded. The architecture is explicitly designed to handle state via lightweight local filesystem JSON operations to reduce deployment overhead.
+* **Live Financial Processing:** Real Stripe/PayPal integrations are excluded; the system strictly uses a mock `create-intent` JSON response to simulate transactional states.
+* **Complex Consultancy Matching Algorithms:** Consultancy assignment operates via location/budget filtering rather than deep ML matching logic.
+
+---
+
+## 🚀 Future Enhancements
+
+* **Database Migration:** Refactoring the current JSON-file architecture to integrate a scalable NoSQL database like MongoDB for robust production data persistence.
+* **OAuth2 Integration:** Upgrading the current basic JWT flow to support Google/GitHub Single Sign-On (SSO) architectures.
+* **Live Webhooks:** Transitioning from the current API polling system (`setInterval` in React) to a WebSocket or SSE architecture for instantaneous cross-portal notification synchronization.
+
+---
+
+## ⚙️ Running the Project Locally
 
 ### Prerequisites
-- Node.js (v18+)
-- Python (3.9+)
-- Install dependencies in respective folders (`npm install`, `pip install -r project/requirements.txt`)
+* **Node.js** (v18+)
+* **Python** (3.9+)
 
-### Startup
-Run the unified Windows script:
+### Installation
+1. Install Python backend dependencies:
+   ```bash
+   cd project
+   pip install -r requirements.txt
+   ```
+2. Install frontend dependencies (run inside `/student/frontend`, `/consultancy/frontend`, `/admin/frontend`, and `/admitbridge-chatbot`):
+   ```bash
+   npm install
+   ```
+
+### Execution (Windows)
+We provide a unified startup script to boot the entire ecosystem concurrently. Ensure your `.env` variables are configured, then double-click or run:
 ```cmd
 start.bat
 ```
-This script will concurrently launch:
-- Flask ML Backend (`localhost:5000`)
-- Chatbot Backend (`localhost:3000`)
-- Student Portal (`localhost:5173`)
-- Consultancy Portal (`localhost:5174`)
-- Admin Portal (`localhost:5175`)
+This automatically launches all three React portals, the Python ML backend, and the Node.js AI chatbot.
