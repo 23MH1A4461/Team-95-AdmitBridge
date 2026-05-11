@@ -4,6 +4,8 @@ import pandas as pd
 import joblib
 import json
 import os
+import jwt
+from datetime import datetime, timedelta
 from datetime import datetime
 
 app = Flask(__name__, static_folder='static', static_url_path='')
@@ -68,9 +70,40 @@ if os.path.exists(model_path) and os.path.exists(db_path) and os.path.exists(opt
 else:
     print("WARNING: artifacts not found. Train the model first.")
 
+SECRET_KEY = "admitbridge_super_secret_jwt_key_for_production"
+
 @app.route('/')
 def serve_frontend():
     return app.send_static_file('index.html')
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role', 'student')
+
+    if not email or not password:
+        return jsonify({"error": "Missing credentials"}), 400
+        
+    # Mock validation - accept any email with 'password'
+    if password != "password":
+        return jsonify({"error": "Invalid credentials. Use 'password' as the password."}), 401
+
+    token = jwt.encode({
+        'user': email,
+        'role': role,
+        'exp': datetime.utcnow() + timedelta(days=1)
+    }, SECRET_KEY, algorithm="HS256")
+
+    user_data = {
+        "id": "usr_" + email.split('@')[0],
+        "name": email.split('@')[0].capitalize(),
+        "email": email,
+        "role": role
+    }
+
+    return jsonify({"token": token, "user": user_data}), 200
 
 @app.route('/api/notifications', methods=['GET'])
 def get_notifications():
@@ -272,6 +305,54 @@ def get_applications():
             except json.JSONDecodeError:
                 return jsonify([])
     return jsonify([])
+
+@app.route('/api/payments/create-intent', methods=['POST'])
+def create_payment_intent():
+    data = request.json
+    return jsonify({
+        "clientSecret": "pi_mock_123456789_secret_mock9876543210",
+        "status": "requires_payment_method"
+    })
+
+@app.route('/api/students/applications/me', methods=['GET'])
+def get_my_applications():
+    if os.path.exists(applications_path):
+        with open(applications_path, 'r') as f:
+            try:
+                apps = json.load(f)
+                # Assign mock IDs and fees for the frontend to render properly
+                for i, app_obj in enumerate(apps):
+                    app_obj['_id'] = f"app_mock_{i}"
+                    app_obj['fee'] = 15000
+                return jsonify(apps)
+            except json.JSONDecodeError:
+                pass
+    return jsonify([])
+
+@app.route('/api/students/applications/<app_id>/status', methods=['PUT'])
+def update_my_application_status(app_id):
+    # Mock successful update
+    return jsonify({"success": True, "status": "Under Review"})
+
+@app.route('/api/admin/students', methods=['GET'])
+def get_admin_students():
+    return jsonify([
+        {"_id": "usr_64f1a2b3c4d5e6f7a8b9c0d1", "email": "sarah.j@example.com", "createdAt": "2026-05-01T10:00:00Z"},
+        {"_id": "usr_64f1a2b3c4d5e6f7a8b9c0d2", "email": "michael.t@example.com", "createdAt": "2026-05-02T11:30:00Z"},
+        {"_id": "usr_64f1a2b3c4d5e6f7a8b9c0d3", "email": "emily.r@example.com", "createdAt": "2026-05-03T09:15:00Z"},
+        {"_id": "usr_64f1a2b3c4d5e6f7a8b9c0d4", "email": "david.k@example.com", "createdAt": "2026-05-04T14:45:00Z"},
+        {"_id": "usr_64f1a2b3c4d5e6f7a8b9c0d5", "email": "jessica.l@example.com", "createdAt": "2026-05-05T16:20:00Z"}
+    ])
+
+@app.route('/api/admin/applications', methods=['GET'])
+def get_admin_applications():
+    return jsonify([
+        {"_id": "app_64f1a2b3c4d5e6f7a8b9c0d1", "studentName": "Sarah Jenkins", "consultancyName": "Global Reach", "appliedAt": "2026-05-01T10:00:00Z", "status": "Accepted"},
+        {"_id": "app_64f1a2b3c4d5e6f7a8b9c0d2", "studentName": "Michael Thomas", "consultancyName": "Edwise International", "appliedAt": "2026-05-02T11:30:00Z", "status": "Pending"},
+        {"_id": "app_64f1a2b3c4d5e6f7a8b9c0d3", "studentName": "Emily Rodriguez", "consultancyName": "IDP Education", "appliedAt": "2026-05-03T09:15:00Z", "status": "Rejected"},
+        {"_id": "app_64f1a2b3c4d5e6f7a8b9c0d4", "studentName": "David Kim", "consultancyName": "Y-Axis", "appliedAt": "2026-05-04T14:45:00Z", "status": "Pending"},
+        {"_id": "app_64f1a2b3c4d5e6f7a8b9c0d5", "studentName": "Jessica Lee", "consultancyName": "Global Reach", "appliedAt": "2026-05-05T16:20:00Z", "status": "Accepted"}
+    ])
 
 @app.route('/api/applications/update', methods=['POST'])
 def update_application():

@@ -6,15 +6,37 @@ const Consultancies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  // Mock Consultancy Data
-  const [consultancies, setConsultancies] = useState([
-    { id: 101, name: 'Global Ed Advisors', contact: 'contact@globaled.com', location: 'New York, USA', students: 145, status: 'Verified' },
-    { id: 102, name: 'Prime UniPath', contact: 'info@primeunipath.com', location: 'London, UK', students: 89, status: 'Verified' },
-    { id: 103, name: 'Future Scholars', contact: 'apply@futurescholars.net', location: 'Toronto, Canada', students: 0, status: 'Pending' },
-    { id: 104, name: 'AdmitSuccess', contact: 'hello@admitsuccess.com', location: 'Sydney, Australia', students: 234, status: 'Verified' },
-    { id: 105, name: 'Elite Admissions', contact: 'support@eliteadmissions.org', location: 'Berlin, Germany', students: 0, status: 'Rejected' },
-    { id: 106, name: 'UniGate Consulting', contact: 'help@unigate.com', location: 'Dubai, UAE', students: 56, status: 'Verified' },
-  ]);
+  const [consultancies, setConsultancies] = useState([]);
+  const [error, setError] = useState(null);
+
+  React.useEffect(() => {
+    const fetchConsultancies = async () => {
+      try {
+        setError(null);
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/consultancies`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConsultancies(data.map(c => ({
+            id: c._id.substring(18),
+            name: c.email.split('@')[0], // placeholder name
+            contact: c.email,
+            location: 'Remote',
+            students: 0,
+            status: 'Verified'
+          })));
+        } else {
+          setError("Server returned an error while fetching consultancies.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network error: Failed to fetch consultancies. Please try again later.");
+      }
+    };
+    fetchConsultancies();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -59,6 +81,8 @@ const Consultancies = () => {
           <p>Review, verify, and monitor partnered consultancies.</p>
         </div>
       </div>
+
+      {error && <div className="error-alert"><XCircle size={18} /> {error}</div>}
 
       <div className="card table-card">
         <div className="table-header-actions">

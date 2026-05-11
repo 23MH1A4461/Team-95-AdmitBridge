@@ -7,6 +7,7 @@ const Dashboard = () => {
     { type: 'payment', title: 'Payment Approved for MIT Application Fee', time: '1 day ago', color: 'green' },
     { type: 'profile', title: 'Profile Updated successfully', time: '3 days ago', color: 'gold' }
   ]);
+  const [error, setError] = useState(null);
 
   const getTimeAgo = (dateString) => {
     if (!dateString) return 'Time unknown';
@@ -36,7 +37,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/applications');
+        setError(null);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/applications`);
+        if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
           const dynamicActivities = data.reverse().map(app => ({
@@ -52,12 +55,15 @@ const Dashboard = () => {
             ...prev
           ]);
         }
-      } catch (error) {
-        console.error("Error fetching activities", error);
+      } catch (err) {
+        console.error("Error fetching activities", err);
+        // Fallback data
         setActivities(prev => [
           { type: 'application', title: 'Application Submitted to Stanford University', time: '2 hours ago', color: 'blue' },
           ...prev
         ]);
+        // Do not spam user with error if using fallback data, or maybe we do
+        setError("Could not load recent activities. Showing cached data.");
       }
     };
     fetchActivities();
@@ -65,6 +71,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard fade-in">
       
+      {error && <div className="error-alert">{error}</div>}
 
       <div className="dashboard-content">
         <div className="card recent-activity">

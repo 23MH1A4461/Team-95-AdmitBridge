@@ -13,6 +13,7 @@ const CollegeSuggestions = () => {
   const [allColleges, setAllColleges] = useState([]);
   const [filteredColleges, setFilteredColleges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [countryFilter, setCountryFilter] = useState('All Countries');
@@ -35,7 +36,9 @@ const CollegeSuggestions = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
+        setError(null);
         const response = await fetch('/real_universities_list.json');
+        if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         
         // Enhance data with placeholder UI fields
@@ -54,8 +57,9 @@ const CollegeSuggestions = () => {
         const shuffled = enhanced.sort(() => 0.5 - Math.random());
         setAllColleges(shuffled);
         setFilteredColleges(shuffled.slice(0, 50));
-      } catch (error) {
-        console.error("Failed to load universities:", error);
+      } catch (err) {
+        console.error("Failed to load universities:", err);
+        setError("Failed to load universities dataset. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -102,6 +106,8 @@ const CollegeSuggestions = () => {
           <p>Explore our comprehensive database of over 6,000 global universities.</p>
         </div>
       </div>
+      
+      {error && <div className="error-alert">{error}</div>}
 
       <div className="filters-bar card">
         <div className="search-input">

@@ -3,57 +3,50 @@ import { FileCheck, Edit, MessageSquare } from 'lucide-react';
 
 const Applications = () => {
   const [applications, setApplications] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Load initially
-    const loadApplications = () => {
-      const stored = localStorage.getItem('consultancy_applications');
-      if (stored) {
-        setApplications(JSON.parse(stored));
+    const fetchApplications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/applications`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setApplications(data);
+        } else {
+          setError("Failed to fetch applications");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network error fetching applications.");
       }
     };
     
-    loadApplications();
-
-    // Listen for cross-tab or same-window storage events
-    const handleStorageChange = () => {
-      loadApplications();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    // Custom event to handle same-window storage updates easily
-    window.addEventListener('local-storage-update', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage-update', handleStorageChange);
-    };
+    fetchApplications();
+    const interval = setInterval(fetchApplications, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleResubmit = async (appToUpdate) => {
-    const updated = applications.map(app => {
-      if (app.name === appToUpdate.name) {
-        return { ...app, status: 'Under Review' };
-      }
-      return app;
-    });
-    setApplications(updated);
-    localStorage.setItem('consultancy_applications', JSON.stringify(updated));
-    window.dispatchEvent(new Event('local-storage-update'));
     
     // Sync with backend
     try {
-      await fetch('http://localhost:5000/api/applications/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: appToUpdate.name,
-          unis: appToUpdate.unis,
-          status: 'Under Review'
-        })
+      setError(null);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${appToUpdate._id || 'unknown'}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status: 'Under Review' })
       });
+      if (!response.ok) setError("Server returned an error while updating status.");
     } catch (err) {
       console.error("Failed to sync status update to backend", err);
+      setError("Network error: Failed to sync status. Please try again.");
     }
   };
 
@@ -68,6 +61,8 @@ const Applications = () => {
           <p>Review submitted documents and finalize university applications.</p>
         </div>
       </div>
+
+      {error && <div className="error-alert">{error}</div>}
 
       <div className="card" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>

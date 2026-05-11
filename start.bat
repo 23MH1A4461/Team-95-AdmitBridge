@@ -13,6 +13,9 @@ start cmd /k "cd consultancy\frontend && npm run dev -- --port 5174"
 echo Starting Admin Frontend...
 start cmd /k "cd admin\frontend && npm run dev -- --port 5175"
 
+echo Starting Main Node.js Backend...
+start cmd /k "cd backend && npm start"
+
 echo Starting Chatbot Backend...
 start cmd /k "cd admitbridge-chatbot && node server.js"
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 const CollegeFinderFrame = () => {
-  const [iframeUrl, setIframeUrl] = useState('http://localhost:5000/');
+  const [iframeUrl, setIframeUrl] = useState(import.meta.env.VITE_API_URL.replace('/api', '/'));
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('studentProfile');
@@ -22,7 +22,7 @@ const CollegeFinderFrame = () => {
 
         const queryString = params.toString();
         if (queryString) {
-          setIframeUrl(`http://localhost:5000/?${queryString}`);
+          setIframeUrl(`${import.meta.env.VITE_API_URL.replace('/api', '/')}/?${queryString}`);
         }
       } catch (e) {
         console.error("Error parsing profile data", e);

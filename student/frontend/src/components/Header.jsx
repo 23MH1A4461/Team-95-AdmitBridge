@@ -24,13 +24,14 @@ const Header = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/notifications?role=student');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications?role=student`); // Use mock backend url
       if (response.ok) {
         const data = await response.json();
         setNotifications(data);
       }
     } catch (err) {
       console.error("Failed to fetch notifications", err);
+      // We don't show a blocking error alert for notifications to avoid spam
     }
   };
 

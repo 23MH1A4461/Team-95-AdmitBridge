@@ -10,6 +10,7 @@ const StatusTracking = () => {
   const [expandedStep, setExpandedStep] = useState(null);
   const [submissionText, setSubmissionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!application) {
@@ -29,19 +30,19 @@ const StatusTracking = () => {
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/applications');
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (response.ok) {
           const data = await response.json();
           // Find the current application
-          const updatedApp = data.find(app => 
-            app.name === application.name && app.unis === application.university
-          );
+          const updatedApp = data.find(app => app._id === application._id);
           
-          if (updatedApp && (updatedApp.status !== application.status || updatedApp.message !== application.message)) {
+          if (updatedApp && updatedApp.status !== application.status) {
             setApplication(prev => ({
               ...prev,
-              status: updatedApp.status,
-              message: updatedApp.message
+              status: updatedApp.status
             }));
           }
         }
@@ -51,7 +52,7 @@ const StatusTracking = () => {
     }, 3000); // Check every 3 seconds
 
     return () => clearInterval(pollInterval);
-  }, [application?.name, application?.university, application?.status, application?.message]);
+  }, [application]);
 
   if (!application) return null;
 
@@ -59,23 +60,26 @@ const StatusTracking = () => {
     if (!submissionText.trim()) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/applications/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: application.name,
-          unis: application.university,
-          status: 'Under Review',
-          message: '' // Clear the message
-        })
+      setError(null);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${application._id}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'Under Review' })
       });
       if (response.ok) {
-        setApplication({ ...application, status: 'Under Review', message: '' });
+        setApplication({ ...application, status: 'Under Review' });
         setExpandedStep(3);
         setSubmissionText('');
+      } else {
+        setError("Failed to submit documents. Please try again.");
       }
     } catch (err) {
       console.error(err);
+      setError("Network error: Failed to submit documents. Please check your connection.");
     } finally {
       setIsSubmitting(false);
     }

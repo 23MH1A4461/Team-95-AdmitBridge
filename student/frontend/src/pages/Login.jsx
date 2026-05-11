@@ -8,15 +8,39 @@ const Login = () => {
   const location = useLocation();
   const [role, setRole] = useState('student');
 
-  const handleLogin = (e) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (role === 'student') {
-      const redirectTo = location.state?.redirectTo || '/dashboard';
-      navigate(redirectTo);
-    } else if (role === 'consultancy') {
-      window.location.href = 'http://localhost:5174/';
-    } else if (role === 'admin') {
-      window.location.href = 'http://localhost:5175/';
+    setError('');
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+      
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      if (role === 'student') {
+        const redirectTo = location.state?.redirectTo || '/dashboard';
+        navigate(redirectTo);
+      } else if (role === 'consultancy') {
+        window.location.href = `${import.meta.env.VITE_CONSULTANCY_PORTAL_URL}/?token=${data.token}`;
+      } else if (role === 'admin') {
+        window.location.href = `${import.meta.env.VITE_ADMIN_PORTAL_URL}/?token=${data.token}`;
+      }
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -37,13 +61,14 @@ const Login = () => {
           </div>
 
           <form className="auth-form" onSubmit={handleLogin}>
+            {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
             <div className="form-group">
               <label>Email Address</label>
-              <input type="email" placeholder="john@example.com" required />
+              <input type="email" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" placeholder="••••••••" required />
+              <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             
             <div className="auth-options">

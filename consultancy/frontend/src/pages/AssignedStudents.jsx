@@ -8,6 +8,7 @@ const AssignedStudents = () => {
   const [filterStatus, setFilterStatus] = useState('NotReviewed');
   const [filterCountry, setFilterCountry] = useState('All Countries');
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState(null);
   
   // New states for Document Verification and Info Requests
   const [verification, setVerification] = useState({
@@ -28,33 +29,30 @@ const AssignedStudents = () => {
   const handleStatusUpdate = async (newStatus, studentToUpdate = selectedStudent, message = null) => {
     if (!studentToUpdate) return;
     
-    // Update main list
-    const updatedStudents = students.map(s => {
-      // using name as identifier since we might not have ID in mock data
-      if (s.name === studentToUpdate.name) {
-        return { ...s, status: newStatus };
-      }
-      return s;
-    });
-    setStudents(updatedStudents);
-    
-    // Persist to localStorage so Applications.jsx can read it
-    localStorage.setItem('consultancy_applications', JSON.stringify(updatedStudents));
-    
     // Sync with backend
     try {
-      await fetch('http://localhost:5000/api/applications/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: studentToUpdate.name,
-          unis: studentToUpdate.unis,
-          status: newStatus,
-          message: message
-        })
+      setError(null);
+      const token = localStorage.getItem('token');
+      await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${studentToUpdate._id}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
       });
+      
+      // Update local state
+      const updatedStudents = students.map(s => {
+        if (s._id === studentToUpdate._id) {
+          return { ...s, status: newStatus };
+        }
+        return s;
+      });
+      setStudents(updatedStudents);
     } catch (err) {
       console.error("Failed to sync status update to backend", err);
+      setError("Network error: Failed to update status. Please try again.");
     }
     
     // Close the modal
@@ -64,40 +62,41 @@ const AssignedStudents = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        let currentStudents = [];
-        const stored = localStorage.getItem('consultancy_applications');
-        if (stored) {
-          currentStudents = JSON.parse(stored);
+        setError(null);
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (!token || !userStr) return;
+        
+        const user = JSON.parse(userStr);
+        // Assuming user.email is the consultancy name for mock purposes
+        const consultancyName = user.email.split('@')[0];
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/consultancy/${consultancyName}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Transform backend data to match UI
+          const transformed = data.map(app => ({
+            _id: app._id,
+            name: app.studentName || 'Student',
+            initials: (app.studentName || 'Student').substring(0, 2).toUpperCase(),
+            status: app.status,
+            course: app.targetCourse,
+            country: app.targetCountry,
+            score: app.examScore,
+            unis: 'Pending Selection',
+            email: app.email,
+            cgpa: app.cgpa
+          }));
+          setStudents(transformed);
         } else {
-          currentStudents = [
-            { name: 'Alex Johnson', initials: 'AJ', status: 'Pending', course: 'Computer Science', country: 'USA', score: '310', unis: 'Stanford, MIT', email: 'alex@example.com', cgpa: '8.5' },
-            { name: 'Maria Garcia', initials: 'MG', status: 'Applied', course: 'Data Science', country: 'UK', score: '7.5', unis: 'Oxford, Cambridge', email: 'maria@example.com', cgpa: '9.0' }
-          ];
+          setError("Server returned an error while fetching students.");
         }
-
-        try {
-          const response = await fetch('http://localhost:5000/api/applications');
-          if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-              // Merge backend data with local data
-              data.forEach(backendApp => {
-                const exists = currentStudents.find(s => s.name === backendApp.name && s.unis === backendApp.unis);
-                if (!exists) {
-                  currentStudents = [backendApp, ...currentStudents];
-                }
-              });
-            }
-          }
-        } catch (e) {
-          console.warn("Backend fetch failed, using local/fallback data");
-        }
-
-        setStudents(currentStudents);
-        localStorage.setItem('consultancy_applications', JSON.stringify(currentStudents));
-        window.dispatchEvent(new Event('local-storage-update'));
-      } catch (error) {
-        console.error("Failed to fetch applications:", error);
+      } catch (err) {
+        console.error("Failed to fetch applications:", err);
+        setError("Network error: Failed to fetch students. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -147,6 +146,7 @@ const AssignedStudents = () => {
       </div>
 
       <div className="card" style={{ padding: '16px 24px', marginBottom: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {error && <div className="error-alert" style={{ width: '100%' }}>{error}</div>}
         <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
           <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
           <input 

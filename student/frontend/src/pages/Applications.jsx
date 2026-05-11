@@ -6,12 +6,14 @@ import './Applications.css';
 const Applications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/applications');
+        setError(null);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/applications`); // Uses mock backend if available, or real
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -32,6 +34,7 @@ const Applications = () => {
         }
       } catch (err) {
         console.error("Failed to fetch applications", err);
+        setError("Network error: Failed to fetch applications. Showing cached data.");
       }
       
       // Fallback
@@ -88,6 +91,7 @@ const Applications = () => {
         <h1>My Applications</h1>
         <p>Track the status of your university applications.</p>
       </div>
+      {error && <div className="error-alert">{error}</div>}
       {loading ? (
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-light)' }}>Loading your applications...</div>
       ) : (

@@ -6,16 +6,36 @@ const Applications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  // Mock Applications Data
-  const [applications, setApplications] = useState([
-    { id: 'APP-1001', student: 'Alice Smith', consultancy: 'Global Ed Advisors', date: '2023-11-15', status: 'Accepted' },
-    { id: 'APP-1002', student: 'Bob Johnson', consultancy: 'Prime UniPath', date: '2023-12-02', status: 'Pending' },
-    { id: 'APP-1003', student: 'Charlie Davis', consultancy: 'Global Ed Advisors', date: '2023-12-05', status: 'Rejected' },
-    { id: 'APP-1004', student: 'Diana Prince', consultancy: 'AdmitSuccess', date: '2024-01-10', status: 'Accepted' },
-    { id: 'APP-1005', student: 'Fiona Gallagher', consultancy: 'Future Scholars', date: '2024-02-22', status: 'Pending' },
-    { id: 'APP-1006', student: 'George Miller', consultancy: 'Prime UniPath', date: '2024-03-01', status: 'Pending' },
-    { id: 'APP-1007', student: 'Bob Johnson', consultancy: 'AdmitSuccess', date: '2024-03-15', status: 'Pending' },
-  ]);
+  const [applications, setApplications] = useState([]);
+  const [error, setError] = useState(null);
+
+  React.useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        setError(null);
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/applications`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setApplications(data.map(app => ({
+            id: app._id.substring(18),
+            student: app.studentName || 'Unknown Student',
+            consultancy: app.consultancyName,
+            date: app.appliedAt,
+            status: app.status
+          })));
+        } else {
+          setError("Server returned an error while fetching applications.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network error: Failed to fetch applications. Please try again later.");
+      }
+    };
+    fetchApps();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -59,6 +79,8 @@ const Applications = () => {
           <p>Monitor all student applications across partner consultancies.</p>
         </div>
       </div>
+
+      {error && <div className="error-alert"><XCircle size={18} /> {error}</div>}
 
       <div className="card table-card">
         <div className="table-header-actions">

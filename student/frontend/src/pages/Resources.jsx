@@ -7,11 +7,13 @@ const Resources = () => {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/resources');
+        setError(null);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/resources`); // Changed to generic mock or actual endpoint
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -22,6 +24,7 @@ const Resources = () => {
         }
       } catch (err) {
         console.error("Failed to fetch resources", err);
+        setError("Network error: Could not fetch live resources. Showing cached data.");
       }
       
       // Fallback Data
@@ -108,6 +111,8 @@ const Resources = () => {
           <p>Guides, templates, and materials to supercharge your admission journey.</p>
         </div>
       </div>
+      
+      {error && <div className="error-alert">{error}</div>}
 
       <div className="resources-controls">
         <div className="search-box">

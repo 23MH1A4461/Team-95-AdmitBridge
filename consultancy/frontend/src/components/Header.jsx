@@ -6,6 +6,7 @@ import './Header.css';
 const Header = () => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [error, setError] = useState(null);
   const notifRef = useRef(null);
 
   useEffect(() => {
@@ -22,13 +23,16 @@ const Header = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/notifications?role=consultant');
+      // Clear error only when manually fetching or opening dropdown? We'll just leave it.
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications?role=consultant`); // using mock
       if (response.ok) {
         const data = await response.json();
         setNotifications(data);
       }
     } catch (err) {
       console.error("Failed to fetch notifications", err);
+      // Don't show global UI error for background notification polling, just keep it out of the user's face
+      // setError("Failed to load notifications.");
     }
   };
 

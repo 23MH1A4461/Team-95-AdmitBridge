@@ -6,6 +6,7 @@ const Payments = () => {
   const [file, setFile] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleBrowseClick = () => {
@@ -34,36 +35,70 @@ const Payments = () => {
   const handleSubmitReceipt = async () => {
     if (!file) return;
     
-    const pendingApp = applications.find(app => app.status === 'Pending');
+    const pendingApp = applications.find(app => app.status === 'Pending' || app.status === 'Accepted');
     if (!pendingApp) {
-      alert("No pending applications found to submit documents for.");
+      alert("No suitable applications found to submit documents for.");
       return;
     }
     
     try {
-      const response = await fetch('http://localhost:5000/api/applications/resubmit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: pendingApp.name, unis: pendingApp.unis })
+      setError(null);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/${pendingApp._id}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'Under Review' })
       });
       if (response.ok) {
         alert("Receipt/Documents submitted successfully! The consultant has been notified.");
         setFile(null);
         // Force refresh
-        const refetch = await fetch('http://localhost:5000/api/applications');
+        const refetch = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         setApplications(await refetch.json());
+      } else {
+        setError("Failed to submit receipt to the server.");
       }
     } catch(err) {
       console.error(err);
+      setError("Network error: Failed to submit receipt. Please try again.");
+    }
+  };
+
+  const handlePayNow = async (appId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/payments/create-intent`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: 15000, currency: 'usd' }) // mock amounts
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Payment successful! Mock Transaction ID: ${data.clientSecret}`);
+      }
+    } catch(err) {
+      console.error('Payment error', err);
     }
   };
 
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/applications');
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/students/applications/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (response.ok) {
           const data = await response.json();
+          // Map MongoDB _id to app logic
           setApplications(data);
         }
       } catch (err) {
@@ -86,6 +121,8 @@ const Payments = () => {
           <p>Manage your fee receipts and transaction details securely.</p>
         </div>
       </div>
+
+      {error && <div className="error-alert">{error}</div>}
 
       <div className="payments-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
         
@@ -123,6 +160,7 @@ const Payments = () => {
                       <button 
                         className={isAccepted ? "btn-primary" : "btn-secondary"} 
                         disabled={!isAccepted}
+                        onClick={() => handlePayNow(app._id)}
                         style={{ opacity: !isAccepted ? 0.6 : 1, cursor: !isAccepted ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', backgroundColor: isAccepted ? 'var(--success-color)' : '', borderColor: isAccepted ? 'var(--success-color)' : '' }}
                       >
                         {!isAccepted ? <Lock size={16} /> : <CheckCircle size={16} />}

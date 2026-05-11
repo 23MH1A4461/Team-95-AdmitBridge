@@ -6,16 +6,38 @@ const Students = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  // Mock Student Data
-  const [students, setStudents] = useState([
-    { id: 1, name: 'Alice Smith', email: 'alice.smith@example.com', date: '2023-10-15', status: 'Active', applicationStatus: 'Accepted' },
-    { id: 2, name: 'Bob Johnson', email: 'bob.j@example.com', date: '2023-11-02', status: 'Active', applicationStatus: 'Pending' },
-    { id: 3, name: 'Charlie Davis', email: 'charlie.d@example.com', date: '2023-11-20', status: 'Suspended', applicationStatus: 'Rejected' },
-    { id: 4, name: 'Diana Prince', email: 'diana.p@example.com', date: '2023-12-05', status: 'Active', applicationStatus: 'Accepted' },
-    { id: 5, name: 'Ethan Hunt', email: 'ethan.h@example.com', date: '2024-01-12', status: 'Active', applicationStatus: 'None' },
-    { id: 6, name: 'Fiona Gallagher', email: 'fiona.g@example.com', date: '2024-02-18', status: 'Suspended', applicationStatus: 'Pending' },
-    { id: 7, name: 'George Miller', email: 'george.m@example.com', date: '2024-03-22', status: 'Active', applicationStatus: 'None' },
-  ]);
+  const [students, setStudents] = useState([]);
+  const [error, setError] = useState(null);
+
+  React.useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setError(null);
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/students`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Transform if needed to match UI expectations
+          setStudents(data.map(u => ({
+            id: u._id.substring(18), // pseudo ID
+            name: u.email.split('@')[0], // mock name since User only has email
+            email: u.email,
+            date: u.createdAt,
+            status: 'Active',
+            applicationStatus: 'None' // We could fetch apps to join this later
+          })));
+        } else {
+          setError("Server returned an error while fetching students.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network error: Failed to fetch students. Please try again later.");
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -62,6 +84,8 @@ const Students = () => {
           <p>View and manage all registered student accounts.</p>
         </div>
       </div>
+
+      {error && <div className="error-alert"><XCircle size={18} /> {error}</div>}
 
       <div className="card table-card">
         <div className="table-header-actions">

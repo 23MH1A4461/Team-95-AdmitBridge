@@ -53,7 +53,7 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
-            <a href="http://localhost:5173/" className="nav-link">
+            <a href={import.meta.env.VITE_STUDENT_PORTAL_URL} className="nav-link">
               <Compass size={20} />
               <span>Back to Home</span>
             </a>
