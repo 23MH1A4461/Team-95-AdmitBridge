@@ -9,7 +9,7 @@ const authFetch = async (url, options = {}) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  return authFetch(url, { ...options, headers });
+  return fetch(url, { ...options, headers });
 };
 
 

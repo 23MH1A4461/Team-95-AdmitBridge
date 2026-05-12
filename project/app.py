@@ -19,17 +19,82 @@ model_path = os.path.join(BASE_DIR, 'model.pkl')
 db_path = os.path.join(BASE_DIR, 'universities_db.csv')
 options_path = os.path.join(BASE_DIR, 'options.json')
 consultancies_path = os.path.join(BASE_DIR, 'consultancies_dataset_final.csv')
-applications_path = os.path.join(BASE_DIR, 'applications.json')
-notifications_path = os.path.join(BASE_DIR, 'notifications.json')
+class DataStore:
+    def __init__(self, base_dir):
+        self.applications_path = os.path.join(base_dir, 'applications.json')
+        self.notifications_path = os.path.join(base_dir, 'notifications.json')
+        self.messages_path = os.path.join(base_dir, 'messages.json')
+
+    def _read_json(self, path):
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                try:
+                    return json.load(f)
+                except json.JSONDecodeError:
+                    return []
+        return []
+
+    def _write_json(self, path, data):
+        with open(path, 'w') as f:
+            json.dump(data, f, indent=4)
+
+    def get_applications(self):
+        return self._read_json(self.applications_path)
+        
+    def save_applications(self, apps):
+        self._write_json(self.applications_path, apps)
+        
+    def get_notifications(self):
+        return self._read_json(self.notifications_path)
+        
+    def save_notifications(self, notifs):
+        self._write_json(self.notifications_path, notifs)
+
+    def get_messages(self):
+        return self._read_json(self.messages_path)
+
+    def save_messages(self, messages):
+        self._write_json(self.messages_path, messages)
+
+    """
+    MongoDB Adapter Implementation Guide:
+    To migrate to MongoDB, replace this DataStore class with a MongoDataStore class 
+    that implements the same method signatures:
+    
+    class MongoDataStore:
+        def __init__(self, uri):
+            self.client = MongoClient(uri)
+            self.db = self.client.admitbridge
+            
+        def get_applications(self):
+            return list(self.db.applications.find({}, {'_id': False}))
+            
+        def save_applications(self, apps):
+            self.db.applications.delete_many({})
+            if apps:
+                self.db.applications.insert_many(apps)
+                
+        def get_notifications(self):
+            return list(self.db.notifications.find({}, {'_id': False}))
+            
+        def save_notifications(self, notifs):
+            self.db.notifications.delete_many({})
+            if notifs:
+                self.db.notifications.insert_many(notifs)
+                
+        def get_messages(self):
+            return list(self.db.messages.find({}, {'_id': False}))
+            
+        def save_messages(self, msgs):
+            self.db.messages.delete_many({})
+            if msgs:
+                self.db.messages.insert_many(msgs)
+    """
+
+data_store = DataStore(BASE_DIR)
 
 def add_notification(target, title, message):
-    notifications = []
-    if os.path.exists(notifications_path):
-        with open(notifications_path, 'r') as f:
-            try:
-                notifications = json.load(f)
-            except json.JSONDecodeError:
-                pass
+    notifications = data_store.get_notifications()
     
     notif = {
         "id": datetime.now().timestamp(),
@@ -42,8 +107,7 @@ def add_notification(target, title, message):
     }
     notifications.insert(0, notif)
     
-    with open(notifications_path, 'w') as f:
-        json.dump(notifications, f, indent=4)
+    data_store.save_notifications(notifications)
 
 model = None
 universities_db = None
@@ -161,14 +225,8 @@ def register():
 @token_required
 def get_notifications():
     role = request.args.get('role', 'student')
-    notifications = []
-    if os.path.exists(notifications_path):
-        with open(notifications_path, 'r') as f:
-            try:
-                all_notifs = json.load(f)
-                notifications = [n for n in all_notifs if n.get('target') == role]
-            except json.JSONDecodeError:
-                pass
+    all_notifs = data_store.get_notifications()
+    notifications = [n for n in all_notifs if n.get('target') == role]
     return jsonify(notifications)
 
 @app.route('/api/options', methods=['GET'])
@@ -303,13 +361,7 @@ def recommend_consultancies():
 @token_required
 def apply_consultancy():
     data = request.json
-    applications = []
-    if os.path.exists(applications_path):
-        with open(applications_path, 'r') as f:
-            try:
-                applications = json.load(f)
-            except json.JSONDecodeError:
-                pass
+    applications = data_store.get_applications()
     
     # Generate a simple initials from name
     first = data.get('first_name', '')
@@ -331,8 +383,7 @@ def apply_consultancy():
     }
     applications.append(app_record)
     
-    with open(applications_path, 'w') as f:
-        json.dump(applications, f, indent=4)
+    data_store.save_applications(applications)
         
     # Generate Notification for Consultant
     add_notification('consultant', 'New Lead Received', f"{first} {last} has applied for {data.get('school_name', 'N/A')}.")
@@ -342,27 +393,21 @@ def apply_consultancy():
 @app.route('/api/applications', methods=['GET'])
 @token_required
 def get_applications():
-    if os.path.exists(applications_path):
-        with open(applications_path, 'r') as f:
+    apps = data_store.get_applications()
+    # Dynamically fetch fee from consultancies dataset
+    if consultancies_db is not None:
+        for app_obj in apps:
+            app_obj['fee'] = 15000 # Fallback
             try:
-                apps = json.load(f)
-                # Dynamically fetch fee from consultancies dataset
-                if consultancies_db is not None:
-                    for app_obj in apps:
-                        app_obj['fee'] = 15000 # Fallback
-                        try:
-                            c_name = app_obj.get('consultancyName')
-                            if c_name:
-                                matches = consultancies_db[consultancies_db['consultancy_name'] == c_name]
-                                if not matches.empty:
-                                    val = matches.iloc[0]['total_fee_inr']
-                                    app_obj['fee'] = int(float(val))
-                        except Exception as e:
-                            print(f"Failed to fetch dynamic fee for {c_name}: {e}")
-                return jsonify(apps)
-            except json.JSONDecodeError:
-                return jsonify([])
-    return jsonify([])
+                c_name = app_obj.get('consultancyName')
+                if c_name:
+                    matches = consultancies_db[consultancies_db['consultancy_name'] == c_name]
+                    if not matches.empty:
+                        val = matches.iloc[0]['total_fee_inr']
+                        app_obj['fee'] = int(float(val))
+            except Exception as e:
+                print(f"Failed to fetch dynamic fee for {c_name}: {e}")
+    return jsonify(apps)
 
 @app.route('/api/payments/create-intent', methods=['POST'])
 @token_required
@@ -376,18 +421,12 @@ def create_payment_intent():
 @app.route('/api/students/applications/me', methods=['GET'])
 @token_required
 def get_my_applications():
-    if os.path.exists(applications_path):
-        with open(applications_path, 'r') as f:
-            try:
-                apps = json.load(f)
-                # Assign mock IDs and fees for the frontend to render properly
-                for i, app_obj in enumerate(apps):
-                    app_obj['_id'] = f"app_mock_{i}"
-                    app_obj['fee'] = 15000
-                return jsonify(apps)
-            except json.JSONDecodeError:
-                pass
-    return jsonify([])
+    apps = data_store.get_applications()
+    # Assign mock IDs and fees for the frontend to render properly
+    for i, app_obj in enumerate(apps):
+        app_obj['_id'] = f"app_mock_{i}"
+        app_obj['fee'] = 15000
+    return jsonify(apps)
 
 @app.route('/api/students/applications/<app_id>/status', methods=['PUT'])
 @token_required
@@ -429,13 +468,7 @@ def update_application():
     if not name or not unis or not new_status:
         return jsonify({"error": "Missing required fields"}), 400
         
-    applications = []
-    if os.path.exists(applications_path):
-        with open(applications_path, 'r') as f:
-            try:
-                applications = json.load(f)
-            except json.JSONDecodeError:
-                pass
+    applications = data_store.get_applications()
                 
     updated = False
     for app_record in applications:
@@ -452,8 +485,7 @@ def update_application():
             break
             
     if updated:
-        with open(applications_path, 'w') as f:
-            json.dump(applications, f, indent=4)
+        data_store.save_applications(applications)
             
         # Generate Notification for Student
         add_notification('student', 'Application Status Updated', f"Your application to {unis} is now: {new_status}.")
@@ -472,13 +504,7 @@ def resubmit_application():
     if not name or not unis:
         return jsonify({"error": "Missing required fields"}), 400
         
-    applications = []
-    if os.path.exists(applications_path):
-        with open(applications_path, 'r') as f:
-            try:
-                applications = json.load(f)
-            except json.JSONDecodeError:
-                pass
+    applications = data_store.get_applications()
                 
     updated = False
     for app_record in applications:
@@ -488,8 +514,7 @@ def resubmit_application():
             break
             
     if updated:
-        with open(applications_path, 'w') as f:
-            json.dump(applications, f, indent=4)
+        data_store.save_applications(applications)
             
         # Generate Notification for Consultant
         add_notification('consultant', 'Documents Resubmitted', f"Student {name} has uploaded new documents for {unis}.")
