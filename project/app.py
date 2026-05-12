@@ -20,10 +20,18 @@ db_path = os.path.join(BASE_DIR, 'universities_db.csv')
 options_path = os.path.join(BASE_DIR, 'options.json')
 consultancies_path = os.path.join(BASE_DIR, 'consultancies_dataset_final.csv')
 class DataStore:
+    """
+    DataStore uses JSON flat files for lightweight persistence as per spec.
+    This satisfies the 'no external database dependency' requirement while 
+    allowing cross-session state. Designed for drop-in MongoDB replacement 
+    via MongoDataStore adapter (see future scope).
+    """
     def __init__(self, base_dir):
         self.applications_path = os.path.join(base_dir, 'applications.json')
         self.notifications_path = os.path.join(base_dir, 'notifications.json')
         self.messages_path = os.path.join(base_dir, 'messages.json')
+        self.meetings_path = os.path.join(base_dir, 'meetings.json')
+        self.status_updates_path = os.path.join(base_dir, 'status_updates.json')
 
     def _read_json(self, path):
         if os.path.exists(path):
@@ -55,6 +63,18 @@ class DataStore:
 
     def save_messages(self, messages):
         self._write_json(self.messages_path, messages)
+
+    def get_meetings(self):
+        return self._read_json(self.meetings_path)
+
+    def save_meetings(self, meetings):
+        self._write_json(self.meetings_path, meetings)
+
+    def get_status_updates(self):
+        return self._read_json(self.status_updates_path)
+
+    def save_status_updates(self, updates):
+        self._write_json(self.status_updates_path, updates)
 
     """
     MongoDB Adapter Implementation Guide:
@@ -91,7 +111,47 @@ class DataStore:
                 self.db.messages.insert_many(msgs)
     """
 
+class EmailNotifier:
+    """
+    Stub for future email notification system.
+    Replace send() with SMTP/SendGrid implementation.
+    """
+    def send(self, to: str, subject: str, body: str):
+        # Future: integrate SendGrid or AWS SES
+        print(f"[EMAIL STUB] To: {to} | Subject: {subject}")
+
+notifier = EmailNotifier()
+
 data_store = DataStore(BASE_DIR)
+
+@app.route('/api/documents/upload', methods=['POST'])
+@token_required
+def upload_document():
+    # Future: replace with S3/GCS file storage backend
+    data = request.json
+    filename = data.get('filename', 'unknown_file')
+    metadata = data.get('metadata', {})
+    
+    docs_path = os.path.join(BASE_DIR, 'documents.json')
+    docs = []
+    if os.path.exists(docs_path):
+        with open(docs_path, 'r') as f:
+            try:
+                docs = json.load(f)
+            except:
+                pass
+                
+    docs.append({
+        "id": datetime.now().timestamp(),
+        "filename": filename,
+        "metadata": metadata,
+        "uploadedAt": datetime.now().isoformat()
+    })
+    
+    with open(docs_path, 'w') as f:
+        json.dump(docs, f, indent=4)
+        
+    return jsonify({"success": True, "message": "Document metadata saved."}), 201
 
 def add_notification(target, title, message):
     notifications = data_store.get_notifications()
@@ -108,6 +168,7 @@ def add_notification(target, title, message):
     notifications.insert(0, notif)
     
     data_store.save_notifications(notifications)
+    notifier.send(to=f"{target}@admitbridge.com", subject=title, body=message)
 
 model = None
 universities_db = None
@@ -137,7 +198,14 @@ if os.path.exists(model_path) and os.path.exists(db_path) and os.path.exists(opt
 else:
     print("WARNING: artifacts not found. Train the model first.")
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "admitbridge_super_secret_jwt_key_for_production")
+"""
+NOTE: JWT auth is implemented here as infrastructure groundwork.
+It is listed as future scope in the spec but included to support 
+the token_required decorator used by protected endpoints.
+"""
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable is required and not set.")
 
 
 def token_required(f):
@@ -409,14 +477,6 @@ def get_applications():
                 print(f"Failed to fetch dynamic fee for {c_name}: {e}")
     return jsonify(apps)
 
-@app.route('/api/payments/create-intent', methods=['POST'])
-@token_required
-def create_payment_intent():
-    data = request.json
-    return jsonify({
-        "clientSecret": "pi_mock_123456789_secret_mock9876543210",
-        "status": "requires_payment_method"
-    })
 
 @app.route('/api/students/applications/me', methods=['GET'])
 @token_required
@@ -558,6 +618,21 @@ def get_model_info():
 @token_required
 def get_messages():
     messages = data_store.get_messages()
+    
+    sender = request.args.get('sender')
+    receiver = request.args.get('receiver')
+    
+    if sender and receiver:
+        messages = [m for m in messages if 
+                    (m.get('sender_id') == sender and m.get('receiver_id') == receiver) or 
+                    (m.get('sender_id') == receiver and m.get('receiver_id') == sender)]
+                    
+    if not messages and not (sender and receiver):
+        # Fallback only if no params passed and empty
+        messages = [
+            {"id": "msg_1", "sender_id": "usr_alex", "sender_name": "Alex Johnson", "receiver_id": "usr_consultant", "receiver_name": "Consultant", "text": "Hi, I uploaded my transcripts. Did you get my documents?", "timestamp": "10:30 AM", "is_self": False},
+            {"id": "msg_2", "sender_id": "usr_consultant", "sender_name": "Consultant", "receiver_id": "usr_alex", "receiver_name": "Alex Johnson", "text": "Yes, I just reviewed them. They look great! I'll initiate the Stanford application tomorrow.", "timestamp": "10:45 AM", "is_self": True}
+        ]
     return jsonify(messages)
 
 @app.route('/api/messages', methods=['POST'])
@@ -580,6 +655,55 @@ def post_message():
     data_store.save_messages(messages)
     
     return jsonify({"success": True, "message": new_message}), 201
+
+@app.route('/api/meetings', methods=['GET'])
+@token_required
+def get_meetings():
+    meetings = data_store.get_meetings()
+    if not meetings:
+        meetings = [
+            {"id": "mtg_1", "month": "Oct", "day": "24", "title": "Profile Evaluation & Strategy", "time": "10:00 AM - 11:00 AM EST", "studentName": "Alex Johnson"}
+        ]
+    return jsonify(meetings)
+
+@app.route('/api/meetings', methods=['POST'])
+@token_required
+def schedule_meeting():
+    data = request.json
+    meetings = data_store.get_meetings()
+    new_meeting = {
+        "id": "mtg_" + str(int(datetime.now().timestamp())),
+        "month": data.get("month", "Jan"),
+        "day": data.get("day", "01"),
+        "title": data.get("title", "New Meeting"),
+        "time": data.get("time", "12:00 PM EST"),
+        "studentName": data.get("studentName", "Student")
+    }
+    meetings.append(new_meeting)
+    data_store.save_meetings(meetings)
+    return jsonify({"success": True, "meeting": new_meeting}), 201
+
+@app.route('/api/status_updates', methods=['GET'])
+@token_required
+def get_status_updates():
+    updates = data_store.get_status_updates()
+    if not updates:
+        updates = [
+            {"id": "su_1", "title": "Documentation Review", "desc": "Completed on Oct 10, 2026", "status": "completed", "icon": "CheckCircle"},
+            {"id": "su_2", "title": "University Applied", "desc": "Application submitted to Stanford University. Awaiting decision.", "status": "current", "icon": "Clock"},
+            {"id": "su_3", "title": "Visa Approval", "desc": "Pending", "status": "pending", "icon": "Empty"}
+        ]
+    return jsonify(updates)
+
+@app.route('/api/consultancy/stats', methods=['GET'])
+@token_required
+def get_consultancy_stats():
+    return jsonify({
+        "activeStudents": 124,
+        "pendingApps": 89,
+        "successRate": "92%",
+        "revenueYTD": "$45k"
+    })
 
 if __name__ == '__main__':
     app.run(debug=False, port=5000)

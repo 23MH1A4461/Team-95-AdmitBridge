@@ -49,7 +49,11 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 AdmitBridge Server running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    const PORT = 3000;
+    app.listen(PORT, () => {
+        console.log(`🚀 AdmitBridge Server running at http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;

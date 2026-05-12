@@ -1,7 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, FileCheck, TrendingUp, DollarSign } from 'lucide-react';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 const Dashboard = () => {
+  const [stats, setStats] = useState({
+    activeStudents: 0,
+    pendingApps: 0,
+    successRate: "0%",
+    revenueYTD: "$0"
+  });
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setError(null);
+        // We can fetch both stats and applications
+        const [statsRes, leadsRes] = await Promise.all([
+          authFetch(`${import.meta.env.VITE_API_URL}/consultancy/stats`),
+          authFetch(`${import.meta.env.VITE_API_URL}/applications`)
+        ]);
+
+        if (statsRes.ok && leadsRes.ok) {
+          const statsData = await statsRes.json();
+          const allLeads = await leadsRes.json();
+          setStats(statsData);
+          
+          const formattedLeads = allLeads.slice(0, 5).map(app => ({
+            id: app._id,
+            name: app.studentName || 'Student',
+            country: app.targetCountry || 'N/A',
+            match: app.cgpa ? `${Math.min(99, Math.round(app.cgpa * 10))}%` : '85%',
+            status: app.status
+          }));
+          setLeads(formattedLeads);
+        } else {
+          setError("Failed to fetch dashboard data.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network error: Failed to fetch dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  const getBadgeClass = (status) => {
+    if (status === 'Applied' || status === 'Accepted') return 'badge-approved';
+    if (status === 'Pending' || status === 'New Lead') return 'badge-pending';
+    return 'badge-review';
+  };
+
   return (
     <div className="dashboard fade-in">
       <div className="page-header">
@@ -14,13 +75,15 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {error && <div className="error-alert" style={{ marginBottom: '16px' }}>{error}</div>}
+
       <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div className="card stat-card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div className="stat-icon" style={{ backgroundColor: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary-color)', padding: '16px', borderRadius: '12px' }}>
             <Users size={28} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>124</h3>
+            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>{loading ? '-' : stats.activeStudents}</h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Active Students</p>
           </div>
         </div>
@@ -29,7 +92,7 @@ const Dashboard = () => {
             <FileCheck size={28} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>89</h3>
+            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>{loading ? '-' : stats.pendingApps}</h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Pending Applications</p>
           </div>
         </div>
@@ -38,7 +101,7 @@ const Dashboard = () => {
             <TrendingUp size={28} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>92%</h3>
+            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>{loading ? '-' : stats.successRate}</h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Success Rate</p>
           </div>
         </div>
@@ -47,7 +110,7 @@ const Dashboard = () => {
             <DollarSign size={28} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>$45k</h3>
+            <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: 'var(--text-dark)' }}>{loading ? '-' : stats.revenueYTD}</h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Revenue (YTD)</p>
           </div>
         </div>
@@ -55,40 +118,35 @@ const Dashboard = () => {
 
       <div className="card">
         <h3 style={{ marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>Recent Student Leads</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', color: 'var(--text-light)', borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '12px 0' }}>Student Name</th>
-              <th style={{ padding: '12px 0' }}>Target Country</th>
-              <th style={{ padding: '12px 0' }}>Profile Match</th>
-              <th style={{ padding: '12px 0' }}>Status</th>
-              <th style={{ padding: '12px 0' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-              <td style={{ padding: '16px 0', fontWeight: 500 }}>John Doe</td>
-              <td style={{ padding: '16px 0' }}>USA</td>
-              <td style={{ padding: '16px 0' }}><span style={{ color: 'var(--success-color)', fontWeight: 600 }}>95%</span></td>
-              <td style={{ padding: '16px 0' }}><span className="badge badge-pending">New Lead</span></td>
-              <td style={{ padding: '16px 0' }}><button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Review Profile</button></td>
-            </tr>
-            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-              <td style={{ padding: '16px 0', fontWeight: 500 }}>Emma Smith</td>
-              <td style={{ padding: '16px 0' }}>UK</td>
-              <td style={{ padding: '16px 0' }}><span style={{ color: 'var(--warning-color)', fontWeight: 600 }}>82%</span></td>
-              <td style={{ padding: '16px 0' }}><span className="badge badge-review">Contacted</span></td>
-              <td style={{ padding: '16px 0' }}><button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>View Details</button></td>
-            </tr>
-            <tr>
-              <td style={{ padding: '16px 0', fontWeight: 500 }}>Michael Chen</td>
-              <td style={{ padding: '16px 0' }}>Germany</td>
-              <td style={{ padding: '16px 0' }}><span style={{ color: 'var(--success-color)', fontWeight: 600 }}>91%</span></td>
-              <td style={{ padding: '16px 0' }}><span className="badge badge-approved">Enrolled</span></td>
-              <td style={{ padding: '16px 0' }}><button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>View Details</button></td>
-            </tr>
-          </tbody>
-        </table>
+        
+        {loading ? (
+          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '20px' }}>Loading recent leads...</p>
+        ) : leads.length === 0 ? (
+          <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '20px' }}>No recent leads found.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', color: 'var(--text-light)', borderBottom: '1px solid var(--border-color)' }}>
+                <th style={{ padding: '12px 0' }}>Student Name</th>
+                <th style={{ padding: '12px 0' }}>Target Country</th>
+                <th style={{ padding: '12px 0' }}>Profile Match</th>
+                <th style={{ padding: '12px 0' }}>Status</th>
+                <th style={{ padding: '12px 0' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '16px 0', fontWeight: 500 }}>{lead.name}</td>
+                  <td style={{ padding: '16px 0' }}>{lead.country}</td>
+                  <td style={{ padding: '16px 0' }}><span style={{ color: 'var(--success-color)', fontWeight: 600 }}>{lead.match}</span></td>
+                  <td style={{ padding: '16px 0' }}><span className={`badge ${getBadgeClass(lead.status)}`}>{lead.status}</span></td>
+                  <td style={{ padding: '16px 0' }}><button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>View Details</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

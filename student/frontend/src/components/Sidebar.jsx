@@ -9,7 +9,8 @@ import {
   Activity, 
   Settings,
   Search,
-  Compass
+  Compass,
+  MessageSquare
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -21,6 +22,7 @@ const Sidebar = () => {
     { path: '/applications', name: 'Applications', icon: <FileText size={20} /> },
     { path: '/payments', name: 'Payments', icon: <CreditCard size={20} /> },
     { path: '/status', name: 'Status Tracking', icon: <Activity size={20} /> },
+    { path: '/messages', name: 'Consultant Messages', icon: <MessageSquare size={20} /> },
     { path: '/college-finder', name: 'College Finder ML', icon: <Search size={20} /> },
   ];
 

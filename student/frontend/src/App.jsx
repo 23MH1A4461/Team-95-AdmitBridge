@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Resources from './pages/Resources';
 import Home from './pages/Home';
+import Messages from './pages/Messages';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/applications" element={<Applications />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/status" element={<StatusTracking />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/college-finder" element={<CollegeFinderFrame />} />
           </Route>

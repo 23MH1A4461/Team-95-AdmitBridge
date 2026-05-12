@@ -1,42 +1,46 @@
 const request = require('supertest');
-const express = require('express');
 
-// We create a mock version of the app for testing to avoid running the full server with Gemini
-const app = express();
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
+// Mock @google/genai
+jest.mock('@google/genai', () => {
+  return {
+    GoogleGenAI: jest.fn().mockImplementation(() => {
+      return {
+        chats: {
+          create: jest.fn().mockReturnValue({
+            sendMessage: jest.fn().mockImplementation(({ message }) => {
+              if (message === 'fail') {
+                return Promise.reject(new Error('AI failed'));
+              }
+              return Promise.resolve({ text: 'Mock response from AI' });
+            })
+          })
+        }
+      };
+    })
+  };
 });
 
-app.post('/api/chat', (req, res) => {
-    const { prompt } = req.body;
-    if (!prompt) {
-        return res.status(400).json({ error: 'Prompt is required' });
-    }
-    res.status(200).json({ text: 'Mock response from AI' });
-});
+const app = require('./server');
 
 describe('Chatbot API', () => {
-    it('GET /health should return 200', async () => {
-        const response = await request(app).get('/health');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual({ status: 'ok' });
-    });
-
-    it('POST /api/chat should return 400 if prompt is missing', async () => {
-        const response = await request(app)
-            .post('/api/chat')
-            .send({});
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty('error');
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
     it('POST /api/chat should return mock AI response', async () => {
         const response = await request(app)
             .post('/api/chat')
-            .send({ prompt: 'Hello' });
+            .send({ message: 'Hello' });
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('text');
+        expect(response.body).toEqual({ reply: 'Mock response from AI' });
+    });
+
+    it('POST /api/chat should handle AI service failure gracefully', async () => {
+        // We pass 'fail' to trigger the Promise.reject in our mock
+        const response = await request(app)
+            .post('/api/chat')
+            .send({ message: 'fail' });
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'Failed to communicate with AI' });
     });
 });

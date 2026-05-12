@@ -62,6 +62,14 @@ const Payments = () => {
         },
         body: JSON.stringify({ status: 'Under Review' })
       });
+      
+      // Future: replace with S3/GCS file storage backend
+      await authFetch(`${import.meta.env.VITE_API_URL}/documents/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ filename: file, metadata: { type: 'receipt', appId: pendingApp._id } })
+      });
+
       if (response.ok) {
         alert("Receipt/Documents submitted successfully! The consultant has been notified.");
         setFile(null);
@@ -80,23 +88,7 @@ const Payments = () => {
   };
 
   const handlePayNow = async (appId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await authFetch(`${import.meta.env.VITE_API_URL}/payments/create-intent`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount: 15000, currency: 'usd' }) // mock amounts
-      });
-      if (res.ok) {
-        const data = await res.json();
-        alert(`Payment successful! Mock Transaction ID: ${data.clientSecret}`);
-      }
-    } catch(err) {
-      console.error('Payment error', err);
-    }
+    alert("Payment integration coming soon.");
   };
 
   useEffect(() => {

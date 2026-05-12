@@ -344,6 +344,24 @@ const AssignedStudents = () => {
               </div>
             </div>
 
+            {/* Upload Documents Section */}
+            <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '2px solid var(--border-color)' }}>
+              <h4 style={{ color: 'var(--primary-color)', marginBottom: '12px', fontSize: '1.1rem' }}>Upload Documents</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginBottom: '16px' }}>Upload additional documents (offer letters, visa forms) for this student.</p>
+              <input type="file" onChange={async (e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const token = localStorage.getItem('token');
+                  // Future: replace with S3/GCS file storage backend
+                  await authFetch(`${import.meta.env.VITE_API_URL}/documents/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ filename: e.target.files[0].name, metadata: { type: 'consultant_upload', studentId: selectedStudent._id } })
+                  });
+                  alert('Document uploaded successfully!');
+                }
+              }} style={{ display: 'block', width: '100%', padding: '10px', border: '1px dashed var(--border-color)', borderRadius: '8px', background: 'var(--card-bg)' }} />
+            </div>
+
             <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button className="btn-primary" onClick={() => setSelectedStudent(null)}>Close Window</button>
               <div style={{ display: 'flex', gap: '16px' }}>

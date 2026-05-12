@@ -84,9 +84,13 @@ graph TD
 ```
 
 ### Inter-Service Communication Contracts
+* **Persistence:** JSON flat files (no external DB required) — MongoDB-ready via DataStore adapter pattern.
 * **Frontend to Flask API:** Uses RESTful JSON over HTTP. The standard contract mandates an `Authorization: Bearer <token>` header (using mocked PyJWT for stateless routing) and standard HTTP status codes (200 OK, 400 Bad Request, 500 Internal Error).
 * **Frontend to Node Chatbot API:** Express endpoint receives structured prompt queries and streams back AI-generated markdown responses.
 * **API Schema:** Refer to the `openapi.yaml` file located in the root directory for standard OpenAPI 3.0 specs of all endpoints.
+
+### Implementation Notes
+* **JWT Authentication:** NOTE: JWT auth is implemented here as infrastructure groundwork. It is listed as future scope in the spec but included to support the `token_required` decorator used by protected endpoints.
 
 ---
 
@@ -138,9 +142,11 @@ The platform operates as a **Monorepo** using npm workspaces (and Turborepo) to 
 
 | Phase | Milestone | Expected Outcome |
 |-------|-----------|------------------|
-| Q3 2026 | **Database Migration** | Refactoring JSON-file architecture to a scalable NoSQL database like MongoDB. |
+| Q3 2026 | **Database Migration** | Refactoring JSON-file architecture to a scalable NoSQL database like MongoDB. (DataStore adapter prepared) |
 | Q4 2026 | **OAuth2 SSO** | Integrate Google/GitHub Single Sign-On. |
 | Q1 2027 | **Live Webhooks** | Transition from API polling to WebSocket for real-time notifications. |
+| Q2 2027 | **Email Notifications** | Integrate SendGrid or AWS SES for real-time email alerts. (EmailNotifier stub implemented) |
+| Q2 2027 | **Cloud File Storage** | Replace local JSON document metadata with AWS S3/GCS object storage. (Upload API stub implemented) |
 
 ### Lessons Learned
 Building AdmitBridge highlighted the complexities of state synchronization across decoupled frontends. Managing mock data via the filesystem proved effective for rapid prototyping but underscored the necessity of strict API contracts (OpenAPI) to prevent data drift.

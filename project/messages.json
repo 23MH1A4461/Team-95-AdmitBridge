@@ -7,5 +7,23 @@
         "receiver_name": "Admin",
         "text": "Hello world",
         "timestamp": "2026-05-12T10:46:56.581935"
+    },
+    {
+        "id": 1778565052.520838,
+        "sender_id": "usr_test",
+        "sender_name": "Test User",
+        "receiver_id": "usr_admin",
+        "receiver_name": "Admin",
+        "text": "Hello world",
+        "timestamp": "2026-05-12T11:20:52.520843"
+    },
+    {
+        "id": 1778565380.337933,
+        "sender_id": "usr_test",
+        "sender_name": "Test User",
+        "receiver_id": "usr_admin",
+        "receiver_name": "Admin",
+        "text": "Hello world",
+        "timestamp": "2026-05-12T11:26:20.337937"
     }
 ]
