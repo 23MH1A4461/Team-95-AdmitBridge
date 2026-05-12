@@ -554,5 +554,32 @@ def get_model_info():
                 return jsonify({"error": "Failed to parse metrics data."}), 500
     return jsonify({"error": "Metrics data not found. Train the model first."}), 404
 
+@app.route('/api/messages', methods=['GET'])
+@token_required
+def get_messages():
+    messages = data_store.get_messages()
+    return jsonify(messages)
+
+@app.route('/api/messages', methods=['POST'])
+@token_required
+def post_message():
+    data = request.json
+    messages = data_store.get_messages()
+    
+    new_message = {
+        "id": datetime.now().timestamp(),
+        "sender_id": data.get('sender_id', ''),
+        "sender_name": data.get('sender_name', ''),
+        "receiver_id": data.get('receiver_id', ''),
+        "receiver_name": data.get('receiver_name', ''),
+        "text": data.get('text', ''),
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    messages.append(new_message)
+    data_store.save_messages(messages)
+    
+    return jsonify({"success": True, "message": new_message}), 201
+
 if __name__ == '__main__':
     app.run(debug=False, port=5000)

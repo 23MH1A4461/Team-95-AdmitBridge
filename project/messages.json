@@ -1,0 +1,11 @@
+[
+    {
+        "id": 1778563016.581932,
+        "sender_id": "usr_test",
+        "sender_name": "Test User",
+        "receiver_id": "usr_admin",
+        "receiver_name": "Admin",
+        "text": "Hello world",
+        "timestamp": "2026-05-12T10:46:56.581935"
+    }
+]
